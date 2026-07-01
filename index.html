@@ -1,1 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+ <base target="_top">
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <title>AI 智能客服與戰情監控台</title>
+ <style>
+   :root {
+     --primary-color: #4CAF50;
+     --bg-color: #f5f7f9;
+     --chat-bg: #ffffff;
+     --client-msg-bg: #ffffff;
+     --client-msg-border: #e0e0e0;
+     --bot-msg-bg: #e3f2fd;
+     --admin-msg-bg: #dcf8c6;
+     --warroom-msg-bg: #fff9c4;  
+     --text-dark: #333333;
+   }
 
+   body {
+     margin: 0; padding: 0;
+     font-family: 'Helvetica Neue', Helvetica, Arial, '微軟正黑體', sans-serif;
+     background-color: var(--bg-color);
+     overflow: hidden;
+   }
+
+    
+   #tab-navbar {
+     display: flex;
+     height: 50px;
+     background-color: #ffffff;
+     border-bottom: 1px solid #ddd;
+     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+     z-index: 100;
+     position: relative;
+   }
+
+   .tab-btn {
+     flex: 1;
+     background: transparent;
+     border: none;
+     font-size: 16px;
+     font-weight: bold;
+     color: #666;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     outline: none;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+   }
+
+   .tab-btn.active {
+     color: var(--primary-color);
+     border-bottom: 3px solid var(--primary-color);
+     background-color: #f9fdf9;
+   }
+
+   .tab-content {
+     display: none;
+     height: calc(100vh - 50px);
+     width: 100vw;
+   }
+
+   .tab-content.active-tab {
+     display: block;
+   }
+
+    
+   #app-container {
+     display: flex;
+     height: 100%;
+     width: 100%;
+   }
+
+   .sidebar {
+     width: 320px;
+     background: #fff;
+     border-right: 1px solid #ddd;
+     display: flex;
+     flex-direction: column;
+     transition: transform 0.3s ease;
+   }
+
+   .sidebar-header {
+     background-color: var(--primary-color);
+     color: white;
+     padding: 15px 20px;
+     text-align: center;
+     font-size: 18px;
+     font-weight: bold;
+     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+     z-index: 10;
+   }
+
+   .user-list {
+     flex: 1;
+     overflow-y: auto;
+     background-color: #fafafa;
+   }
+
+   .user-item {
+     padding: 18px 20px;
+     border-bottom: 1px solid #eee;
+     cursor: pointer;
+     font-size: 16px;
+     color: var(--text-dark);
+     display: flex;
+     align-items: center;
+     transition: background 0.2s;
+   }
+
+   .user-item:hover, .user-item.active {
+     background-color: #e8f5e9;
+     border-left: 5px solid var(--primary-color);
+   }
+
+   .user-name {
+     flex: 1;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+   }
+
+   .count-badges {
+     display: flex;
+     gap: 6px;
+     margin-left: 8px;
+   }
+
+   .badge {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-size: 12px;
+     font-weight: bold;
+     padding: 3px 8px;
+     border-radius: 12px;
+     box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+   }
+
+   .badge-client {
+     background-color: #dcf8c6;
+     color: #2b5a10;
+   }
+
+   .badge-ai {
+     background-color: #e3f2fd;
+     color: #0d47a1;
+   }
+
+   .badge svg {
+     width: 14px;
+     height: 14px;
+     margin-right: 4px;
+     fill: currentColor;
+   }
+
+   .chat-area {
+     flex: 1;
+     display: flex;
+     flex-direction: column;
+     background: var(--chat-bg);
+     position: relative;
+   }
+
+   .chat-header {
+     background-color: var(--primary-color);
+     color: white;
+     padding: 15px 20px;
+     text-align: center;
+     font-size: 18px;
+     font-weight: bold;
+     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+     z-index: 10;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     position: relative;
+   }
+
+   .back-btn {
+     display: none;
+     position: absolute;
+     left: 15px;
+     font-size: 28px;
+     cursor: pointer;
+     line-height: 1;
+   }
+
+   .chat-messages {
+     flex: 1;
+     padding: 20px;
+     overflow-y: auto;
+     display: flex;
+     flex-direction: column;
+     gap: 15px;
+     background-color: var(--bg-color);
+   }
+
+   .msg-bubble {
+     max-width: 75%;
+     padding: 12px 16px;
+     border-radius: 18px;
+     font-size: 15px;
+     line-height: 1.5;
+     word-wrap: break-word;
+     position: relative;
+     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+   }
+
+   .msg-client {
+     align-self: flex-start;
+     background-color: var(--client-msg-bg);
+     border: 1px solid var(--client-msg-border);
+     color: var(--text-dark);
+     border-bottom-left-radius: 4px;
+   }
+
+   .msg-ai {
+     align-self: flex-end;
+     background-color: var(--bot-msg-bg);
+     color: #0d47a1;
+     border-bottom-right-radius: 4px;
+   }
+
+   .msg-admin {
+     align-self: flex-end;
+     background-color: var(--admin-msg-bg);
+     color: var(--text-dark);
+     border-bottom-right-radius: 4px;
+   }
+   
+   .msg-warroom {
+     align-self: flex-start;
+     background-color: var(--warroom-msg-bg);
+     color: var(--text-dark);
+     border: 1px solid #fbc02d;
+     border-bottom-left-radius: 4px;
+   }
+
+   .msg-pending {
+     opacity: 0.7;
+   }
+
+   .chat-input-area {
+     display: flex;
+     padding: 10px 15px;
+     background: #fff;
+     border-top: 1px solid #ddd;
+     align-items: center;
+     gap: 3px;
+     padding-bottom: env(safe-area-inset-bottom, 10px);
+   }
+
+   .icon-btn {
+     background: transparent; border: none; cursor: pointer; padding: 8px;
+     display: flex; align-items: center; justify-content: center; border-radius: 50%;
+     transition: background 0.3s;
+   }
+   .icon-btn:hover { background-color: #f1f0f0; }
+   .icon-btn svg { width: 22px; height: 22px; fill: #666; transition: fill 0.3s; }
+
+   .chat-input {
+     flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px;
+     outline: none; font-size: 15px; margin: 0 5px; resize: none;
+     font-family: inherit; box-sizing: border-box; height: 45px;
+     line-height: 1.3; overflow-y: auto;
+   }
+
+   .send-btn {
+     background-color: var(--primary-color); color: white; border: none;
+     width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+     display: flex; justify-content: center; align-items: center;
+     transition: background 0.3s, opacity 0.3s; flex-shrink: 0;
+   }
+   .send-btn:hover:not(:disabled) { background-color: #45a049; }
+   .send-btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
+   .send-btn svg { width: 20px; height: 20px; fill: white; }
+
+   @media (max-width: 768px) {
+     .sidebar {
+       width: 100%;
+       position: absolute;
+       z-index: 20;
+       height: 100%;
+     }
+     .sidebar.hidden { transform: translateX(-100%); }
+     .chat-area { width: 100%; height: 100%; }
+     .back-btn { display: block; }
+   }
+ </style>
+</head>
+<body>
+
+ <div id="tab-navbar">
+   <button id="btn-admin" class="tab-btn active" onclick="switchTab('admin')">
+     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+     系統監控台
+   </button>
+   <button id="btn-client" class="tab-btn" onclick="switchTab('client')">
+     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+     客戶測試端
+   </button>
+   <button id="btn-warroom" class="tab-btn" onclick="switchTab('warroom')">
+     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+     老闆戰情室
+   </button>
+ </div>
+
+ 
+ <div id="view-admin" class="tab-content active-tab">
+   <div id="app-container">
+     <div id="sidebar" class="sidebar">
+       <div class="sidebar-header">系統監控台</div>
+       <div id="user-list" class="user-list">
+         <div style="padding: 20px; text-align: center; color: #888;">正在載入資料庫...</div>
+       </div>
+     </div>
+
+     <div class="chat-area">
+       <div class="chat-header">
+         <span class="back-btn" onclick="backToList()">&#8249;</span>
+         <span id="chat-title">請選擇左側客戶</span>
+       </div>
+       
+       <div id="chat-messages" class="chat-messages">
+          <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
+             點擊左側列表客戶，即可開始監看或接管對話
+          </div>
+       </div>
+
+       <div class="chat-input-area">
+         <button class="icon-btn" onclick="alert('監控台模式：目前由系統自動調用雲端多媒體儲存區。')" title="多媒體">
+           <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+         </button>
+         <button class="icon-btn" onclick="alert('監控台模式：目前由系統自動調用雲端文件儲存區。')" title="文件">
+           <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+         </button>
+         <button id="mic-btn" class="icon-btn" onclick="alert('提示：請直接輸入文字回覆，系統會立刻在背景為您接管發送喔！')" title="語音">
+           <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+         </button>
+
+         <textarea id="chat-input" class="chat-input" placeholder="輸入訊息強制接管... (Shift+Enter 換行)" onkeydown="handleKeyPress(event)" disabled></textarea>
+         
+         <button id="send-btn" class="send-btn" onclick="sendMessage()" disabled>
+           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+         </button>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ 
+ <div id="view-client" class="tab-content">
+   <div class="chat-area" style="height: 100%;">
+     <div class="chat-header">
+       <span id="client-chat-title">網頁客戶測試端 (資料同步記錄至雲端)</span>
+     </div>
+     
+     <div id="client-chat-messages" class="chat-messages">
+        <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
+           歡迎進入測試端。請直接發送訊息，系統會以真實客戶流程將對話送至 AI 處理。
+        </div>
+     </div>
+
+     <div class="chat-input-area">
+       <button class="icon-btn" onclick="alert('客戶測試端：開啟上傳多張多媒體資料功能')" title="多媒體">
+         <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+       </button>
+       <button class="icon-btn" onclick="alert('客戶測試端：開啟上傳單一文件文檔資料功能')" title="文件">
+         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+       </button>
+       <button class="icon-btn" onclick="alert('客戶測試端：啟動語音輸入功能')" title="語音">
+         <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+       </button>
+
+       <textarea id="client-chat-input" class="chat-input" placeholder="您現在扮演客戶。輸入訊息測試 AI 回應... (Shift+Enter 換行)" onkeydown="handleClientKeyPress(event)"></textarea>
+       
+       <button id="client-send-btn" class="send-btn" onclick="sendClientMessage()">
+         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+       </button>
+     </div>
+   </div>
+ </div>
+
+ 
+ <div id="view-warroom" class="tab-content">
+   <div class="chat-area" style="height: 100%;">
+     <div class="chat-header">
+       <span id="warroom-chat-title">老闆戰情室 - 麥肯錫高階戰略顧問</span>
+     </div>
+     
+     <div id="warroom-chat-messages" class="chat-messages">
+        <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
+           歡迎來到企業戰情室。<br><br>系統大腦已準備就緒，您可以隨時請我分析「客戶管理」、「收支記帳」或提供高商業價值的決策建議。
+        </div>
+     </div>
+
+     <div class="chat-input-area">
+       <button class="icon-btn" onclick="alert('戰情室模式：開啟上傳多張多媒體資料功能')" title="多媒體">
+         <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+       </button>
+       <button class="icon-btn" onclick="alert('戰情室模式：開啟上傳單一文件文檔資料功能')" title="文件">
+         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+       </button>
+       <button class="icon-btn" onclick="alert('戰情室模式：啟動語音輸入功能')" title="語音">
+         <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+       </button>
+
+       <textarea id="warroom-chat-input" class="chat-input" placeholder="輸入您的指令或提問，進行深層戰略分析... (Shift+Enter 換行)" onkeydown="handleWarRoomKeyPress(event)"></textarea>
+       
+       <button id="warroom-send-btn" class="send-btn" onclick="sendWarRoomMessage()">
+         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+       </button>
+     </div>
+   </div>
+ </div>
+
+ <script>
+   const adminIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+   const advisorIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+
+   // 移除 Markdown 顯示的輔助函數 (前端也進行淨化)
+   function stripMarkdown(text) {
+     if (!text) return "";
+     return text.replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/#{1,6}\s?/g, '')
+                .replace(/`/g, '')
+                .replace(/\n/g, '<br>');
+   }
+
+   
+   
+   
+   function switchTab(tabId) {
+     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+     document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active-tab'));
+     
+     document.getElementById('btn-' + tabId).classList.add('active');
+     document.getElementById('view-' + tabId).classList.add('active-tab');
+   }
+
+   
+   
+   
+   let selectedUserId = null;
+   let pollingInterval = null;
+   let pendingRequests = 0;
+   let localChatCache = {};
+   let localUserCache = [];
+   let readHistoryLength = {};
+
+   window.onload = function() {
+     fetchDataBundle(false);
+     pollingInterval = setInterval(() => {
+       fetchDataBundle(true);
+     }, 5000);
+   };
+
+   function fetchDataBundle(isSilent) {
+     if (typeof google !== 'undefined') {
+       google.script.run
+         .withSuccessHandler(function(bundle) {
+            handleDataBundle(bundle, isSilent);
+         })
+         .withFailureHandler(function(err) { console.error("資料獲取失敗:", err); })
+         .getAdminDataBundle();
+     }
+   }
+
+   function handleDataBundle(bundle, isSilent) {
+     localUserCache = bundle.users;
+     
+     if (pendingRequests > 0 && selectedUserId) {
+        Object.keys(bundle.histories).forEach(uid => {
+          if (uid !== selectedUserId) {
+            localChatCache[uid] = bundle.histories[uid];
+          }
+        });
+     } else {
+        const prevStr = JSON.stringify(localChatCache[selectedUserId] || []);
+        const newStr = JSON.stringify(bundle.histories[selectedUserId] || []);
+        
+        localChatCache = bundle.histories;
+
+        if (selectedUserId) {
+           readHistoryLength[selectedUserId] = (localChatCache[selectedUserId] || []).length;
+            
+           if (isSilent && prevStr === newStr) {
+              renderUserList();
+              return;
+           }
+           renderChatHistory(localChatCache[selectedUserId] || []);
+        }
+     }
+     
+     renderUserList();
+   }
+
+   function renderUserList() {
+     const listEl = document.getElementById('user-list');
+     const uniqueUsers = [];
+     const seenIds = new Set();
+     localUserCache.forEach(u => {
+       if (!seenIds.has(u.userId)) {
+         seenIds.add(u.userId);
+         uniqueUsers.push(u);
+       }
+     });
+
+     if(uniqueUsers.length === 0) {
+        listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">目前尚無客戶紀錄</div>';
+        return;
+     }
+     
+     listEl.innerHTML = '';
+     uniqueUsers.forEach(u => {
+       const item = document.createElement('div');
+       item.className = 'user-item' + (u.userId === selectedUserId ? ' active' : '');
+       
+       let clientCount = 0;
+       let aiCount = 0;
+       const history = localChatCache[u.userId] || [];
+       const readLen = readHistoryLength[u.userId] || 0;
+       
+       for (let i = readLen; i < history.length; i++) {
+         const msg = history[i];
+         if (msg.text.includes("[系統動態觸裝追蹤提醒]")) continue;
+         
+         if (msg.sender === 'client') {
+            clientCount++;
+         } else if (msg.sender === 'ai') {
+            aiCount++;
+         }
+       }
+
+       const nameSpan = document.createElement('span');
+       nameSpan.className = 'user-name';
+       nameSpan.innerText = u.userName;
+       
+       const badgesDiv = document.createElement('div');
+       badgesDiv.className = 'count-badges';
+       
+       if (clientCount > 0) {
+          const clientBadge = document.createElement('div');
+          clientBadge.className = 'badge badge-client';
+          clientBadge.title = "客戶新訊息量";
+          clientBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${clientCount}`;
+          badgesDiv.appendChild(clientBadge);
+       }
+       
+       if (aiCount > 0) {
+          const aiBadge = document.createElement('div');
+          aiBadge.className = 'badge badge-ai';
+          aiBadge.title = "AI新回覆量";
+          aiBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${aiCount}`;
+          badgesDiv.appendChild(aiBadge);
+       }
+
+       item.appendChild(nameSpan);
+       item.appendChild(badgesDiv);
+
+       item.onclick = () => selectUser(u.userId, u.userName);
+       listEl.appendChild(item);
+     });
+   }
+
+   function selectUser(userId, userName) {
+     selectedUserId = userId;
+     pendingRequests = 0;
+     
+     readHistoryLength[userId] = (localChatCache[userId] || []).length;
+
+     document.getElementById('chat-title').innerText = userName + " 的對話";
+     document.getElementById('chat-input').disabled = false;
+     document.getElementById('send-btn').disabled = false;
+     
+     if (window.innerWidth <= 768) {
+       document.getElementById('sidebar').classList.add('hidden');
+     }
+     
+     renderChatHistory(localChatCache[userId] || []);
+     renderUserList();
+   }
+
+   function backToList() {
+     document.getElementById('sidebar').classList.remove('hidden');
+   }
+
+   function renderChatHistory(history) {
+     const msgContainer = document.getElementById('chat-messages');
+     const isAtBottom = msgContainer.scrollHeight - msgContainer.scrollTop <= msgContainer.clientHeight + 80;
+     
+     msgContainer.innerHTML = '';
+     if(history.length === 0) {
+        msgContainer.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">尚無對話紀錄</div>';
+        return;
+     }
+
+     history.forEach(msg => {
+       const bubble = document.createElement('div');
+       bubble.classList.add('msg-bubble');
+       
+       if (msg.sender === 'client') {
+           bubble.classList.add('msg-client');
+       } else if (msg.sender === 'ai') {
+           bubble.classList.add('msg-ai');
+       } else {
+           bubble.classList.add('msg-admin');
+       }
+       
+       let formattedText = stripMarkdown(msg.text);
+       formattedText = formattedText.replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '');
+       formattedText = formattedText.replace(/\[真人客服\]/g, `<strong>${adminIcon}真人接管回覆：</strong><br>`);
+       
+       bubble.innerHTML = formattedText;
+       msgContainer.appendChild(bubble);
+     });
+
+     if(isAtBottom) scrollToBottom();
+   }
+
+   function handleKeyPress(event) {
+     if (event.isComposing || event.keyCode === 229) return;
+     if (event.key === "Enter" && !event.shiftKey) {
+       event.preventDefault();
+       sendMessage();
+     }
+   }
+
+   function sendMessage() {
+     if (!selectedUserId) return;
+
+     const inputEl = document.getElementById('chat-input');
+     const text = inputEl.value.trim();
+     if (!text) return;
+
+     const msgContainer = document.getElementById('chat-messages');
+     const bubble = document.createElement('div');
+     bubble.classList.add('msg-bubble', 'msg-admin', 'msg-pending');
+     
+     bubble.innerHTML = `<strong>${adminIcon}真人接管回覆：</strong><br>` + stripMarkdown(text);
+     msgContainer.appendChild(bubble);
+     scrollToBottom();
+     
+     if (!localChatCache[selectedUserId]) localChatCache[selectedUserId] = [];
+     localChatCache[selectedUserId].push({ sender: 'admin', text: text });
+     
+     readHistoryLength[selectedUserId] = localChatCache[selectedUserId].length;
+
+     inputEl.value = "";
+     inputEl.focus();
+
+     pendingRequests++;
+
+     if (typeof google !== 'undefined') {
+       google.script.run
+         .withSuccessHandler(function() {
+            pendingRequests--;
+            if(pendingRequests === 0) fetchDataBundle(true);
+         })
+         .withFailureHandler(function(e) {
+            pendingRequests--;
+            alert("接管送出異常，請確認網路狀態。");
+         })
+         .sendAdminOverride(selectedUserId, text);
+     }
+   }
+
+   function scrollToBottom() {
+     const msgContainer = document.getElementById('chat-messages');
+     msgContainer.scrollTop = msgContainer.scrollHeight;
+   }
+
+   // =========================================
+   // 客戶測試端 JS 邏輯
+   // =========================================
+   function handleClientKeyPress(event) {
+     if (event.isComposing || event.keyCode === 229) return;
+     if (event.key === "Enter" && !event.shiftKey) {
+       event.preventDefault();
+       sendClientMessage();
+     }
+   }
+
+   function sendClientMessage() {
+     const inputEl = document.getElementById('client-chat-input');
+     const text = inputEl.value.trim();
+     if (!text) return;
+
+     const msgContainer = document.getElementById('client-chat-messages');
+     const bubble = document.createElement('div');
+     bubble.classList.add('msg-bubble', 'msg-client');
+     bubble.innerHTML = stripMarkdown(text);
+     msgContainer.appendChild(bubble);
+     
+     const pendingBubble = document.createElement('div');
+     pendingBubble.classList.add('msg-bubble', 'msg-ai', 'msg-pending');
+     pendingBubble.id = 'client-pending-bubble';
+     pendingBubble.innerHTML = 'AI 正在思考中...';
+     msgContainer.appendChild(pendingBubble);
+
+     clientScrollToBottom();
+     inputEl.value = "";
+     inputEl.disabled = true;
+     document.getElementById('client-send-btn').disabled = true;
+
+     if (typeof google !== 'undefined') {
+       google.script.run
+         .withSuccessHandler(function(aiReply) {
+            const loadingEl = document.getElementById('client-pending-bubble');
+            if (loadingEl) loadingEl.remove();
+
+            const aiBubble = document.createElement('div');
+            aiBubble.classList.add('msg-bubble', 'msg-ai');
+            
+            aiBubble.innerHTML = stripMarkdown(aiReply);
+            msgContainer.appendChild(aiBubble);
+            clientScrollToBottom();
+            
+            inputEl.disabled = false;
+            document.getElementById('client-send-btn').disabled = false;
+            inputEl.focus();
+            
+            fetchDataBundle(true); 
+         })
+         .withFailureHandler(function(e) {
+            const loadingEl = document.getElementById('client-pending-bubble');
+            if (loadingEl) loadingEl.remove();
+            alert("發送失敗，請確認網路狀態。");
+            inputEl.disabled = false;
+            document.getElementById('client-send-btn').disabled = false;
+         })
+         .handleClientMessage('TEST_WEB_CLIENT_001', '網頁測試客戶', text, null);
+     }
+   }
+
+   function clientScrollToBottom() {
+     const msgContainer = document.getElementById('client-chat-messages');
+     msgContainer.scrollTop = msgContainer.scrollHeight;
+   }
+
+   // =========================================
+   // 老闆戰情室 JS 邏輯
+   // =========================================
+   function handleWarRoomKeyPress(event) {
+     if (event.isComposing || event.keyCode === 229) return;
+     if (event.key === "Enter" && !event.shiftKey) {
+       event.preventDefault();
+       sendWarRoomMessage();
+     }
+   }
+
+   function sendWarRoomMessage() {
+     const inputEl = document.getElementById('warroom-chat-input');
+     const text = inputEl.value.trim();
+     if (!text) return;
+
+     const msgContainer = document.getElementById('warroom-chat-messages');
+     
+     // 老闆提問泡泡
+     const userBubble = document.createElement('div');
+     userBubble.classList.add('msg-bubble', 'msg-admin'); 
+     userBubble.innerHTML = stripMarkdown(text);
+     msgContainer.appendChild(userBubble);
+     
+     // 系統思考中泡泡
+     const pendingBubble = document.createElement('div');
+     pendingBubble.classList.add('msg-bubble', 'msg-warroom', 'msg-pending');
+     pendingBubble.id = 'warroom-pending-bubble';
+     pendingBubble.innerHTML = '戰情室核心正在分析龐大資料與運算決策...';
+     msgContainer.appendChild(pendingBubble);
+
+     warRoomScrollToBottom();
+     inputEl.value = "";
+     inputEl.disabled = true;
+     document.getElementById('warroom-send-btn').disabled = true;
+
+     // 透過 webhook POST 或者獨立 function 呼叫
+     // 由於戰情室也需要在前端使用，我們建置一個專屬處理函數
+     if (typeof google !== 'undefined') {
+       // 因為在 GAS 我們把 doPost 和 doGet 結合，這裡直接送 POST 或呼叫 GAS 函數
+       const payload = {
+         action: "war_room_chat",
+         userMessage: text
+       };
+
+       // 取得 Webhook URL (利用 get_config)
+       fetch('?action=get_config')
+         .then(res => res.json())
+         .then(config => {
+            fetch(config.gasUrl, {
+              method: 'POST',
+              body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+               const loadingEl = document.getElementById('warroom-pending-bubble');
+               if (loadingEl) loadingEl.remove();
+
+               const aiBubble = document.createElement('div');
+               aiBubble.classList.add('msg-bubble', 'msg-warroom');
+               aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(data.reply);
+               msgContainer.appendChild(aiBubble);
+               
+               warRoomScrollToBottom();
+               inputEl.disabled = false;
+               document.getElementById('warroom-send-btn').disabled = false;
+               inputEl.focus();
+            })
+            .catch(err => {
+               const loadingEl = document.getElementById('warroom-pending-bubble');
+               if (loadingEl) loadingEl.remove();
+               alert("戰情室連線失敗，請檢查網路！");
+               inputEl.disabled = false;
+               document.getElementById('warroom-send-btn').disabled = false;
+            });
+         });
+     }
+   }
+
+   function warRoomScrollToBottom() {
+     const msgContainer = document.getElementById('warroom-chat-messages');
+     msgContainer.scrollTop = msgContainer.scrollHeight;
+   }
+
+ </script>
+</body>
+</html>
