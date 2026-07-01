@@ -6,7 +6,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
  <meta name="apple-mobile-web-app-capable" content="yes">
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <title>AI 智能企業助理與戰略系統</title>
+ <title>GROWTHX | AI智能企業助理與戰略系統</title>
  <style>
    :root {
      --primary-color: #4CAF50;
@@ -241,9 +241,9 @@
        </div>
        
        <div id="chat-messages" class="chat-messages">
-          <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
+           <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
              點擊左側列表客戶，即可開始監看或接管對話
-          </div>
+           </div>
        </div>
 
        <div class="chat-input-area">
@@ -275,7 +275,7 @@
      
      <div id="client-chat-messages" class="chat-messages">
         <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
-           歡迎進入。請直接發送訊息，系統會為您提供專屬智能服務。
+          歡迎進入。請直接發送訊息，系統會為您提供專屬智能服務。
         </div>
      </div>
 
@@ -307,7 +307,7 @@
      
      <div id="warroom-chat-messages" class="chat-messages">
         <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
-           歡迎來到企業戰情室。<br><br>系統大腦已準備就緒，您可以隨時請我分析「客戶管理」、「收支記帳」或提供高商業價值的決策建議。
+          歡迎來到企業戰情室。<br><br>系統大腦已準備就緒，您可以隨時請我分析「客戶管理」、「收支記帳」或提供高商業價值的決策建議。
         </div>
      </div>
 
@@ -335,12 +335,15 @@
    
    
    
-   const GAS_URL = "https://script.google.com/macros/s/AKfycbz_naez03sAp6o5OuhgkLeU8LbLQ-r5VDXtPiD2cL1j0a5L7QWcB2rI88CL3ksz1Gaz/exec";
+   const GAS_URL = "https://script.google.com/macros/s/AKfycbySnz7p7mZ7sdL25cDVXDURYS7-X1VfWptWWcU343arJ8aPuLtbqLY-pPLV1YsDiip6Zw/exec";
 
    const adminIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
    const advisorIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
 
-   // =========================================
+   // 全局變數：動態存放系統客服角色名稱
+   let systemBotName = "智能客服";
+
+   
    
    
    window.onload = function() {
@@ -352,12 +355,13 @@
      .then(response => response.json())
      .then(data => {
          if (data.botName) {
+             systemBotName = data.botName;
              
-             document.title = data.botName + " 企業助理與戰略系統";
+             document.title = systemBotName + " 企業助理與戰略系統";
              
-             document.getElementById('login-title').innerText = data.botName + " 系統入口";
+             document.getElementById('login-title').innerText = systemBotName + " 系統入口";
              
-             document.getElementById('client-chat-title').innerText = data.botName;
+             document.getElementById('client-chat-title').innerText = systemBotName;
          }
      })
      .catch(err => console.error("系統參數載入失敗", err));
@@ -419,7 +423,7 @@
            document.getElementById('tab-navbar').style.display = 'none';
            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
            document.getElementById('view-client').classList.add('active-tab');
-           document.getElementById('client-chat-title').innerText = "AI 智能助理";
+           document.getElementById('client-chat-title').innerText = systemBotName;
            
            loadClientHistory(currentUserEmail);
          }
@@ -444,7 +448,7 @@
          msgContainer.innerHTML = '';
          
          if(history.length === 0) {
-             msgContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">歡迎！請直接發送訊息，系統會為您提供服務。</div>';
+             msgContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">歡迎！請直接發送訊息，${systemBotName}會為您提供服務。</div>`;
              return;
          }
          
@@ -452,13 +456,13 @@
              const bubble = document.createElement('div');
              bubble.classList.add('msg-bubble');
              if(msg.sender === 'client') {
-                bubble.classList.add('msg-client');
+                 bubble.classList.add('msg-client');
              } else {
-                bubble.classList.add('msg-ai');
+                 bubble.classList.add('msg-ai');
              }
              bubble.innerHTML = stripMarkdown(msg.text)
-                                  .replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '')
-                                  .replace(/\[真人客服\]/g, '');
+                                   .replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '')
+                                   .replace(/\[真人客服\]/g, '');
              msgContainer.appendChild(bubble);
          });
          clientScrollToBottom();
@@ -499,26 +503,26 @@
      localUserCache = bundle.users;
      
      if (pendingRequests > 0 && selectedUserId) {
-        Object.keys(bundle.histories).forEach(uid => {
-          if (uid !== selectedUserId) {
-            localChatCache[uid] = bundle.histories[uid];
-          }
-        });
+         Object.keys(bundle.histories).forEach(uid => {
+           if (uid !== selectedUserId) {
+             localChatCache[uid] = bundle.histories[uid];
+           }
+         });
      } else {
-        const prevStr = JSON.stringify(localChatCache[selectedUserId] || []);
-        const newStr = JSON.stringify(bundle.histories[selectedUserId] || []);
-        
-        localChatCache = bundle.histories;
+         const prevStr = JSON.stringify(localChatCache[selectedUserId] || []);
+         const newStr = JSON.stringify(bundle.histories[selectedUserId] || []);
+         
+         localChatCache = bundle.histories;
 
-        if (selectedUserId) {
+         if (selectedUserId) {
            readHistoryLength[selectedUserId] = (localChatCache[selectedUserId] || []).length;
            
            if (isSilent && prevStr === newStr) {
-              renderUserList();
-              return;
+               renderUserList();
+               return;
            }
            renderChatHistory(localChatCache[selectedUserId] || []);
-        }
+         }
      }
      
      renderUserList();
@@ -536,8 +540,8 @@
      });
 
      if(uniqueUsers.length === 0) {
-        listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">目前尚無客戶紀錄</div>';
-        return;
+         listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">目前尚無客戶紀錄</div>';
+         return;
      }
      
      listEl.innerHTML = '';
@@ -560,9 +564,9 @@
          if (msg.text.includes("[系統動態觸裝追蹤提醒]")) continue;
          
          if (msg.sender === 'client') {
-            clientCount++;
+             clientCount++;
          } else if (msg.sender === 'ai') {
-            aiCount++;
+             aiCount++;
          }
        }
 
@@ -654,8 +658,8 @@
      
      msgContainer.innerHTML = '';
      if(history.length === 0) {
-        msgContainer.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">尚無對話紀錄</div>';
-        return;
+         msgContainer.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">尚無對話紀錄</div>';
+         return;
      }
 
      history.forEach(msg => {
@@ -736,7 +740,7 @@
    }
 
    // =========================================
-   // 客戶端 JS 邏輯 (改用 fetch API)
+   // 客戶端 JS 邏輯
    // =========================================
    function handleClientKeyPress(event) {
      if (event.isComposing || event.keyCode === 229) return;
@@ -807,7 +811,7 @@
    }
 
    // =========================================
-   // 老闆戰情室 JS 邏輯 (改用 fetch API)
+   // 老闆戰情室 JS 邏輯
    // =========================================
    function handleWarRoomKeyPress(event) {
      if (event.isComposing || event.keyCode === 229) return;
