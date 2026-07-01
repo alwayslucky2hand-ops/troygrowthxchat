@@ -331,7 +331,7 @@
    </div>
  </div>
 
- <script>
+<script>
    
    
    
@@ -346,6 +346,7 @@
    window.onload = function() {
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
        body: JSON.stringify({ action: 'get_sys_config' })
      })
      .then(response => response.json())
@@ -398,6 +399,7 @@
      
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
        body: JSON.stringify({ action: 'verify_login', email: email, name: name })
      })
      .then(response => response.json())
@@ -432,6 +434,7 @@
    function loadClientHistory(email) {
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
        body: JSON.stringify({ action: 'get_admin_data' })
      })
      .then(response => response.json())
@@ -484,6 +487,7 @@
    function fetchDataBundle(isSilent) {
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
        body: JSON.stringify({ action: 'get_admin_data' })
      })
      .then(response => response.json())
@@ -594,7 +598,7 @@
        
        if (u.isUrgent) {
          const urgentBadge = document.createElement('div');
-         urgentBadge.className = 'badge badge-urgent';
+         urgentBadge.className = 'badge-urgent badge';
          urgentBadge.title = "超過24小時未回覆";
          urgentBadge.innerText = "急";
          badgesDiv.appendChild(urgentBadge);
@@ -711,6 +715,7 @@
 
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
        body: JSON.stringify({ action: 'send_admin_override', userId: selectedUserId, text: text })
      })
      .then(response => response.json())
@@ -765,6 +770,7 @@
 
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
        body: JSON.stringify({ action: 'client_chat', email: currentUserEmail, name: currentUserName, text: text })
      })
      .then(response => response.json())
@@ -836,6 +842,7 @@
 
      fetch(GAS_URL, {
        method: 'POST',
+       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
        body: JSON.stringify({ action: 'war_room_chat', userMessage: text })
      })
      .then(response => response.json())
