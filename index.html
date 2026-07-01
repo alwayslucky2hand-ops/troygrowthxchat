@@ -6,7 +6,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
  <meta name="apple-mobile-web-app-capable" content="yes">
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <title>AI 智能客服與戰情監控台</title>
+ <title>AI 智能企業助理與戰略系統</title>
  <style>
    :root {
      --primary-color: #4CAF50;
@@ -16,7 +16,7 @@
      --client-msg-border: #e0e0e0;
      --bot-msg-bg: #e3f2fd;
      --admin-msg-bg: #dcf8c6;
-     --warroom-msg-bg: #fff9c4;  
+     --warroom-msg-bg: #fff9c4; 
      --text-dark: #333333;
    }
 
@@ -28,8 +28,44 @@
    }
 
     
+   #login-overlay {
+     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+     background-color: var(--bg-color);
+     display: flex; justify-content: center; align-items: center;
+     z-index: 1000;
+   }
+   
+   .login-box {
+     background: #fff; padding: 40px; border-radius: 12px;
+     box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 400px;
+     text-align: center;
+   }
+   
+   .login-box h2 { margin-top: 0; color: var(--primary-color); font-size: 24px;}
+   .login-box p { color: #666; margin-bottom: 20px; font-size: 14px;}
+   
+   .login-box input {
+     width: 100%; padding: 12px; margin-bottom: 15px;
+     border: 1px solid #ddd; border-radius: 6px; font-size: 15px; box-sizing: border-box;
+     outline: none; transition: border 0.3s;
+   }
+   
+   .login-box input:focus { border-color: var(--primary-color); }
+   
+   .login-box button {
+     width: 100%; padding: 14px; background-color: var(--primary-color);
+     color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold;
+     cursor: pointer; transition: background 0.3s;
+   }
+   
+   .login-box button:hover { background-color: #45a049; }
+   .login-box button:disabled { background-color: #ccc; cursor: not-allowed; }
+   
+   #login-msg { margin-top: 10px; color: #d32f2f; font-size: 14px; min-height: 20px;}
+
+    
    #tab-navbar {
-     display: flex;
+     display: none;
      height: 50px;
      background-color: #ffffff;
      border-bottom: 1px solid #ddd;
@@ -39,243 +75,114 @@
    }
 
    .tab-btn {
-     flex: 1;
-     background: transparent;
-     border: none;
-     font-size: 16px;
-     font-weight: bold;
-     color: #666;
-     cursor: pointer;
-     transition: all 0.3s ease;
-     outline: none;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     gap: 6px;
+     flex: 1; background: transparent; border: none; font-size: 16px;
+     font-weight: bold; color: #666; cursor: pointer; transition: all 0.3s ease;
+     outline: none; display: flex; align-items: center; justify-content: center; gap: 6px;
    }
 
    .tab-btn.active {
-     color: var(--primary-color);
-     border-bottom: 3px solid var(--primary-color);
-     background-color: #f9fdf9;
+     color: var(--primary-color); border-bottom: 3px solid var(--primary-color); background-color: #f9fdf9;
    }
 
    .tab-content {
-     display: none;
-     height: calc(100vh - 50px);
-     width: 100vw;
+     display: none; height: calc(100vh - 50px); width: 100vw;
    }
 
-   .tab-content.active-tab {
-     display: block;
-   }
+   .tab-content.active-tab { display: block; }
 
     
-   #app-container {
-     display: flex;
-     height: 100%;
-     width: 100%;
-   }
+   #app-container { display: flex; height: 100%; width: 100%; }
 
    .sidebar {
-     width: 320px;
-     background: #fff;
-     border-right: 1px solid #ddd;
-     display: flex;
-     flex-direction: column;
-     transition: transform 0.3s ease;
+     width: 320px; background: #fff; border-right: 1px solid #ddd;
+     display: flex; flex-direction: column; transition: transform 0.3s ease;
    }
 
    .sidebar-header {
-     background-color: var(--primary-color);
-     color: white;
-     padding: 15px 20px;
-     text-align: center;
-     font-size: 18px;
-     font-weight: bold;
-     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-     z-index: 10;
+     background-color: var(--primary-color); color: white; padding: 15px 20px;
+     text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10;
    }
 
-   .user-list {
-     flex: 1;
-     overflow-y: auto;
-     background-color: #fafafa;
-   }
+   .user-list { flex: 1; overflow-y: auto; background-color: #fafafa; }
 
    .user-item {
-     padding: 18px 20px;
-     border-bottom: 1px solid #eee;
-     cursor: pointer;
-     font-size: 16px;
-     color: var(--text-dark);
-     display: flex;
-     align-items: center;
-     transition: background 0.2s;
+     padding: 18px 20px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px;
+     color: var(--text-dark); display: flex; align-items: center; transition: background 0.2s;
    }
 
    .user-item:hover, .user-item.active {
-     background-color: #e8f5e9;
-     border-left: 5px solid var(--primary-color);
+     background-color: #e8f5e9; border-left: 5px solid var(--primary-color);
    }
 
-   .user-name {
-     flex: 1;
-     overflow: hidden;
-     text-overflow: ellipsis;
-     white-space: nowrap;
-   }
+   .user-item.state-booked { background-color: #fff9c4; border-left: 5px solid #fbc02d; }
+   .user-item.state-booked.active { background-color: #fff59d; }
+   .user-item.state-completed { background-color: #e8f5e9; border-left: 5px solid #4CAF50; }
+   .user-item.state-completed.active { background-color: #c8e6c9; }
 
-   .count-badges {
-     display: flex;
-     gap: 6px;
-     margin-left: 8px;
-   }
+   .user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold;}
+
+   .count-badges { display: flex; gap: 6px; margin-left: 8px; align-items: center; }
 
    .badge {
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     font-size: 12px;
-     font-weight: bold;
-     padding: 3px 8px;
-     border-radius: 12px;
-     box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+     display: flex; align-items: center; justify-content: center; font-size: 12px;
+     font-weight: bold; padding: 3px 8px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
    }
 
-   .badge-client {
-     background-color: #dcf8c6;
-     color: #2b5a10;
-   }
+   .badge-client { background-color: #dcf8c6; color: #2b5a10; }
+   .badge-ai { background-color: #e3f2fd; color: #0d47a1; }
+   
+   .badge-urgent { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; animation: pulse 2s infinite; }
+   
+   .badge-label { background-color: #e0e0e0; color: #333; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; font-weight: normal;}
 
-   .badge-ai {
-     background-color: #e3f2fd;
-     color: #0d47a1;
-   }
+   @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-   .badge svg {
-     width: 14px;
-     height: 14px;
-     margin-right: 4px;
-     fill: currentColor;
-   }
+   .badge svg { width: 14px; height: 14px; margin-right: 4px; fill: currentColor; }
 
-   .chat-area {
-     flex: 1;
-     display: flex;
-     flex-direction: column;
-     background: var(--chat-bg);
-     position: relative;
-   }
+   .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); position: relative; }
 
    .chat-header {
-     background-color: var(--primary-color);
-     color: white;
-     padding: 15px 20px;
-     text-align: center;
-     font-size: 18px;
-     font-weight: bold;
-     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-     z-index: 10;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     position: relative;
+     background-color: var(--primary-color); color: white; padding: 15px 20px; text-align: center;
+     font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10;
+     display: flex; align-items: center; justify-content: center; position: relative;
    }
 
-   .back-btn {
-     display: none;
-     position: absolute;
-     left: 15px;
-     font-size: 28px;
-     cursor: pointer;
-     line-height: 1;
-   }
+   .back-btn { display: none; position: absolute; left: 15px; font-size: 28px; cursor: pointer; line-height: 1; }
 
-   .chat-messages {
-     flex: 1;
-     padding: 20px;
-     overflow-y: auto;
-     display: flex;
-     flex-direction: column;
-     gap: 15px;
-     background-color: var(--bg-color);
-   }
+   .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: var(--bg-color); }
 
    .msg-bubble {
-     max-width: 75%;
-     padding: 12px 16px;
-     border-radius: 18px;
-     font-size: 15px;
-     line-height: 1.5;
-     word-wrap: break-word;
-     position: relative;
-     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+     max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px;
+     line-height: 1.5; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
    }
 
-   .msg-client {
-     align-self: flex-start;
-     background-color: var(--client-msg-bg);
-     border: 1px solid var(--client-msg-border);
-     color: var(--text-dark);
-     border-bottom-left-radius: 4px;
-   }
-
-   .msg-ai {
-     align-self: flex-end;
-     background-color: var(--bot-msg-bg);
-     color: #0d47a1;
-     border-bottom-right-radius: 4px;
-   }
-
-   .msg-admin {
-     align-self: flex-end;
-     background-color: var(--admin-msg-bg);
-     color: var(--text-dark);
-     border-bottom-right-radius: 4px;
-   }
-   
-   .msg-warroom {
-     align-self: flex-start;
-     background-color: var(--warroom-msg-bg);
-     color: var(--text-dark);
-     border: 1px solid #fbc02d;
-     border-bottom-left-radius: 4px;
-   }
-
-   .msg-pending {
-     opacity: 0.7;
-   }
+   .msg-client { align-self: flex-start; background-color: var(--client-msg-bg); border: 1px solid var(--client-msg-border); color: var(--text-dark); border-bottom-left-radius: 4px; }
+   .msg-ai { align-self: flex-end; background-color: var(--bot-msg-bg); color: #0d47a1; border-bottom-right-radius: 4px; }
+   .msg-admin { align-self: flex-end; background-color: var(--admin-msg-bg); color: var(--text-dark); border-bottom-right-radius: 4px; }
+   .msg-warroom { align-self: flex-start; background-color: var(--warroom-msg-bg); color: var(--text-dark); border: 1px solid #fbc02d; border-bottom-left-radius: 4px; }
+   .msg-pending { opacity: 0.7; }
 
    .chat-input-area {
-     display: flex;
-     padding: 10px 15px;
-     background: #fff;
-     border-top: 1px solid #ddd;
-     align-items: center;
-     gap: 3px;
-     padding-bottom: env(safe-area-inset-bottom, 10px);
+     display: flex; padding: 10px 15px; background: #fff; border-top: 1px solid #ddd;
+     align-items: center; gap: 3px; padding-bottom: env(safe-area-inset-bottom, 10px);
    }
 
    .icon-btn {
-     background: transparent; border: none; cursor: pointer; padding: 8px;
-     display: flex; align-items: center; justify-content: center; border-radius: 50%;
-     transition: background 0.3s;
+     background: transparent; border: none; cursor: pointer; padding: 8px; display: flex;
+     align-items: center; justify-content: center; border-radius: 50%; transition: background 0.3s;
    }
    .icon-btn:hover { background-color: #f1f0f0; }
    .icon-btn svg { width: 22px; height: 22px; fill: #666; transition: fill 0.3s; }
 
    .chat-input {
-     flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px;
-     outline: none; font-size: 15px; margin: 0 5px; resize: none;
-     font-family: inherit; box-sizing: border-box; height: 45px;
-     line-height: 1.3; overflow-y: auto;
+     flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none;
+     font-size: 15px; margin: 0 5px; resize: none; font-family: inherit; box-sizing: border-box;
+     height: 45px; line-height: 1.3; overflow-y: auto;
    }
 
    .send-btn {
-     background-color: var(--primary-color); color: white; border: none;
-     width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
-     display: flex; justify-content: center; align-items: center;
+     background-color: var(--primary-color); color: white; border: none; width: 42px; height: 42px;
+     border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center;
      transition: background 0.3s, opacity 0.3s; flex-shrink: 0;
    }
    .send-btn:hover:not(:disabled) { background-color: #45a049; }
@@ -283,12 +190,7 @@
    .send-btn svg { width: 20px; height: 20px; fill: white; }
 
    @media (max-width: 768px) {
-     .sidebar {
-       width: 100%;
-       position: absolute;
-       z-index: 20;
-       height: 100%;
-     }
+     .sidebar { width: 100%; position: absolute; z-index: 20; height: 100%; }
      .sidebar.hidden { transform: translateX(-100%); }
      .chat-area { width: 100%; height: 100%; }
      .back-btn { display: block; }
@@ -296,6 +198,17 @@
  </style>
 </head>
 <body>
+
+ <div id="login-overlay">
+   <div class="login-box">
+     <h2 id="login-title">AI 系統入口</h2>
+     <p>請輸入您的資訊以登入或開始對話</p>
+     <input type="text" id="login-name" placeholder="您的稱呼 (如：王小明)">
+     <input type="email" id="login-email" placeholder="您的 Email">
+     <button id="login-btn" onclick="performLogin()">進入系統</button>
+     <div id="login-msg"></div>
+   </div>
+ </div>
 
  <div id="tab-navbar">
    <button id="btn-admin" class="tab-btn active" onclick="switchTab('admin')">
@@ -312,8 +225,7 @@
    </button>
  </div>
 
- 
- <div id="view-admin" class="tab-content active-tab">
+ <div id="view-admin" class="tab-content">
    <div id="app-container">
      <div id="sidebar" class="sidebar">
        <div class="sidebar-header">系統監控台</div>
@@ -355,31 +267,30 @@
    </div>
  </div>
 
- 
  <div id="view-client" class="tab-content">
    <div class="chat-area" style="height: 100%;">
      <div class="chat-header">
-       <span id="client-chat-title">網頁客戶測試端 (資料同步記錄至雲端)</span>
+       <span id="client-chat-title">網頁客戶端 (資料同步記錄至雲端)</span>
      </div>
      
      <div id="client-chat-messages" class="chat-messages">
         <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
-           歡迎進入測試端。請直接發送訊息，系統會以真實客戶流程將對話送至 AI 處理。
+           歡迎進入。請直接發送訊息，系統會為您提供專屬智能服務。
         </div>
      </div>
 
      <div class="chat-input-area">
-       <button class="icon-btn" onclick="alert('客戶測試端：開啟上傳多張多媒體資料功能')" title="多媒體">
+       <button class="icon-btn" onclick="alert('客戶端模式：開啟上傳多張多媒體資料功能')" title="多媒體">
          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
        </button>
-       <button class="icon-btn" onclick="alert('客戶測試端：開啟上傳單一文件文檔資料功能')" title="文件">
+       <button class="icon-btn" onclick="alert('客戶端模式：開啟上傳單一文件文檔資料功能')" title="文件">
          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
        </button>
-       <button class="icon-btn" onclick="alert('客戶測試端：啟動語音輸入功能')" title="語音">
+       <button class="icon-btn" onclick="alert('客戶端模式：啟動語音輸入功能')" title="語音">
          <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
        </button>
 
-       <textarea id="client-chat-input" class="chat-input" placeholder="您現在扮演客戶。輸入訊息測試 AI 回應... (Shift+Enter 換行)" onkeydown="handleClientKeyPress(event)"></textarea>
+       <textarea id="client-chat-input" class="chat-input" placeholder="請輸入訊息... (Shift+Enter 換行)" onkeydown="handleClientKeyPress(event)"></textarea>
        
        <button id="client-send-btn" class="send-btn" onclick="sendClientMessage()">
          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -388,7 +299,6 @@
    </div>
  </div>
 
- 
  <div id="view-warroom" class="tab-content">
    <div class="chat-area" style="height: 100%;">
      <div class="chat-header">
@@ -422,10 +332,36 @@
  </div>
 
  <script>
+   
+   
+   
+   const GAS_URL = "https://script.google.com/macros/s/AKfycbz_naez03sAp6o5OuhgkLeU8LbLQ-r5VDXtPiD2cL1j0a5L7QWcB2rI88CL3ksz1Gaz/exec";
+
    const adminIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
    const advisorIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
 
-   // 移除 Markdown 顯示的輔助函數 (前端也進行淨化)
+   // =========================================
+   
+   
+   window.onload = function() {
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'get_sys_config' })
+     })
+     .then(response => response.json())
+     .then(data => {
+         if (data.botName) {
+             
+             document.title = data.botName + " 企業助理與戰略系統";
+             
+             document.getElementById('login-title').innerText = data.botName + " 系統入口";
+             
+             document.getElementById('client-chat-title').innerText = data.botName;
+         }
+     })
+     .catch(err => console.error("系統參數載入失敗", err));
+   };
+
    function stripMarkdown(text) {
      if (!text) return "";
      return text.replace(/\*\*(.*?)\*\*/g, '$1')
@@ -438,6 +374,95 @@
    
    
    
+   let currentUserEmail = "";
+   let currentUserName = "";
+   let currentUserRole = "";
+
+   function performLogin() {
+     const name = document.getElementById('login-name').value.trim();
+     const email = document.getElementById('login-email').value.trim();
+     const msgEl = document.getElementById('login-msg');
+
+     if(!name || !email) {
+       msgEl.innerText = "請完整填寫稱呼與 Email。";
+       return;
+     }
+     if(!email.includes('@')) {
+       msgEl.innerText = "請輸入有效的 Email 格式。";
+       return;
+     }
+
+     msgEl.innerText = "驗證中，請稍候...";
+     document.getElementById('login-btn').disabled = true;
+
+     
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'verify_login', email: email, name: name })
+     })
+     .then(response => response.json())
+     .then(res => {
+         currentUserEmail = res.email;
+         currentUserName = res.name;
+         currentUserRole = res.role;
+
+         document.getElementById('login-overlay').style.display = 'none';
+
+         if(currentUserRole === 'boss') {
+           document.getElementById('tab-navbar').style.display = 'flex';
+           switchTab('admin');
+           fetchDataBundle(false);
+           pollingInterval = setInterval(() => { fetchDataBundle(true); }, 5000);
+         } else {
+           document.getElementById('tab-navbar').style.display = 'none';
+           document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
+           document.getElementById('view-client').classList.add('active-tab');
+           document.getElementById('client-chat-title').innerText = "AI 智能助理";
+           
+           loadClientHistory(currentUserEmail);
+         }
+     })
+     .catch(err => {
+         msgEl.innerText = "系統連線異常，請稍後再試。";
+         document.getElementById('login-btn').disabled = false;
+         console.error(err);
+     });
+   }
+
+   function loadClientHistory(email) {
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'get_admin_data' })
+     })
+     .then(response => response.json())
+     .then(bundle => {
+         const history = bundle.histories[email] || [];
+         const msgContainer = document.getElementById('client-chat-messages');
+         msgContainer.innerHTML = '';
+         
+         if(history.length === 0) {
+             msgContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">歡迎！請直接發送訊息，系統會為您提供服務。</div>';
+             return;
+         }
+         
+         history.forEach(msg => {
+             const bubble = document.createElement('div');
+             bubble.classList.add('msg-bubble');
+             if(msg.sender === 'client') {
+                bubble.classList.add('msg-client');
+             } else {
+                bubble.classList.add('msg-ai');
+             }
+             bubble.innerHTML = stripMarkdown(msg.text)
+                                  .replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '')
+                                  .replace(/\[真人客服\]/g, '');
+             msgContainer.appendChild(bubble);
+         });
+         clientScrollToBottom();
+     })
+     .catch(err => console.error(err));
+   }
+
    function switchTab(tabId) {
      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
      document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active-tab'));
@@ -456,22 +481,14 @@
    let localUserCache = [];
    let readHistoryLength = {};
 
-   window.onload = function() {
-     fetchDataBundle(false);
-     pollingInterval = setInterval(() => {
-       fetchDataBundle(true);
-     }, 5000);
-   };
-
    function fetchDataBundle(isSilent) {
-     if (typeof google !== 'undefined') {
-       google.script.run
-         .withSuccessHandler(function(bundle) {
-            handleDataBundle(bundle, isSilent);
-         })
-         .withFailureHandler(function(err) { console.error("資料獲取失敗:", err); })
-         .getAdminDataBundle();
-     }
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'get_admin_data' })
+     })
+     .then(response => response.json())
+     .then(bundle => handleDataBundle(bundle, isSilent))
+     .catch(err => console.error("資料獲取失敗:", err));
    }
 
    function handleDataBundle(bundle, isSilent) {
@@ -491,7 +508,7 @@
 
         if (selectedUserId) {
            readHistoryLength[selectedUserId] = (localChatCache[selectedUserId] || []).length;
-            
+           
            if (isSilent && prevStr === newStr) {
               renderUserList();
               return;
@@ -521,8 +538,13 @@
      
      listEl.innerHTML = '';
      uniqueUsers.forEach(u => {
+       let userClass = 'user-item';
+       if (u.userId === selectedUserId) userClass += ' active';
+       if (u.bookingState === 'booked') userClass += ' state-booked';
+       else if (u.bookingState === 'completed') userClass += ' state-completed';
+
        const item = document.createElement('div');
-       item.className = 'user-item' + (u.userId === selectedUserId ? ' active' : '');
+       item.className = userClass;
        
        let clientCount = 0;
        let aiCount = 0;
@@ -540,30 +562,61 @@
          }
        }
 
+       const infoCol = document.createElement('div');
+       infoCol.style.flex = '1';
+       infoCol.style.overflow = 'hidden';
+       infoCol.style.display = 'flex';
+       infoCol.style.flexDirection = 'column';
+       infoCol.style.justifyContent = 'center';
+
        const nameSpan = document.createElement('span');
        nameSpan.className = 'user-name';
        nameSpan.innerText = u.userName;
+       infoCol.appendChild(nameSpan);
+
+       if (u.labels && u.labels.length > 0) {
+           const labelsDiv = document.createElement('div');
+           labelsDiv.style.display = 'flex';
+           labelsDiv.style.gap = '4px';
+           labelsDiv.style.marginTop = '4px';
+           labelsDiv.style.overflow = 'hidden';
+           u.labels.forEach(lbl => {
+               const lSpan = document.createElement('span');
+               lSpan.className = 'badge-label';
+               lSpan.innerText = lbl;
+               labelsDiv.appendChild(lSpan);
+           });
+           infoCol.appendChild(labelsDiv);
+       }
        
        const badgesDiv = document.createElement('div');
        badgesDiv.className = 'count-badges';
        
+       if (u.isUrgent) {
+         const urgentBadge = document.createElement('div');
+         urgentBadge.className = 'badge badge-urgent';
+         urgentBadge.title = "超過24小時未回覆";
+         urgentBadge.innerText = "急";
+         badgesDiv.appendChild(urgentBadge);
+       }
+
        if (clientCount > 0) {
-          const clientBadge = document.createElement('div');
-          clientBadge.className = 'badge badge-client';
-          clientBadge.title = "客戶新訊息量";
-          clientBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${clientCount}`;
-          badgesDiv.appendChild(clientBadge);
+         const clientBadge = document.createElement('div');
+         clientBadge.className = 'badge badge-client';
+         clientBadge.title = "客戶新訊息量";
+         clientBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${clientCount}`;
+         badgesDiv.appendChild(clientBadge);
        }
        
        if (aiCount > 0) {
-          const aiBadge = document.createElement('div');
-          aiBadge.className = 'badge badge-ai';
-          aiBadge.title = "AI新回覆量";
-          aiBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${aiCount}`;
-          badgesDiv.appendChild(aiBadge);
+         const aiBadge = document.createElement('div');
+         aiBadge.className = 'badge badge-ai';
+         aiBadge.title = "AI新回覆量";
+         aiBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${aiCount}`;
+         badgesDiv.appendChild(aiBadge);
        }
 
-       item.appendChild(nameSpan);
+       item.appendChild(infoCol);
        item.appendChild(badgesDiv);
 
        item.onclick = () => selectUser(u.userId, u.userName);
@@ -574,9 +627,7 @@
    function selectUser(userId, userName) {
      selectedUserId = userId;
      pendingRequests = 0;
-     
      readHistoryLength[userId] = (localChatCache[userId] || []).length;
-
      document.getElementById('chat-title').innerText = userName + " 的對話";
      document.getElementById('chat-input').disabled = false;
      document.getElementById('send-btn').disabled = false;
@@ -608,11 +659,11 @@
        bubble.classList.add('msg-bubble');
        
        if (msg.sender === 'client') {
-           bubble.classList.add('msg-client');
+         bubble.classList.add('msg-client');
        } else if (msg.sender === 'ai') {
-           bubble.classList.add('msg-ai');
+         bubble.classList.add('msg-ai');
        } else {
-           bubble.classList.add('msg-admin');
+         bubble.classList.add('msg-admin');
        }
        
        let formattedText = stripMarkdown(msg.text);
@@ -651,7 +702,6 @@
      
      if (!localChatCache[selectedUserId]) localChatCache[selectedUserId] = [];
      localChatCache[selectedUserId].push({ sender: 'admin', text: text });
-     
      readHistoryLength[selectedUserId] = localChatCache[selectedUserId].length;
 
      inputEl.value = "";
@@ -659,18 +709,20 @@
 
      pendingRequests++;
 
-     if (typeof google !== 'undefined') {
-       google.script.run
-         .withSuccessHandler(function() {
-            pendingRequests--;
-            if(pendingRequests === 0) fetchDataBundle(true);
-         })
-         .withFailureHandler(function(e) {
-            pendingRequests--;
-            alert("接管送出異常，請確認網路狀態。");
-         })
-         .sendAdminOverride(selectedUserId, text);
-     }
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'send_admin_override', userId: selectedUserId, text: text })
+     })
+     .then(response => response.json())
+     .then(res => {
+         pendingRequests--;
+         if(pendingRequests === 0) fetchDataBundle(true);
+     })
+     .catch(err => {
+         pendingRequests--;
+         alert("接管送出異常，請確認網路狀態。");
+         console.error(err);
+     });
    }
 
    function scrollToBottom() {
@@ -679,7 +731,7 @@
    }
 
    // =========================================
-   // 客戶測試端 JS 邏輯
+   // 客戶端 JS 邏輯 (改用 fetch API)
    // =========================================
    function handleClientKeyPress(event) {
      if (event.isComposing || event.keyCode === 229) return;
@@ -711,34 +763,36 @@
      inputEl.disabled = true;
      document.getElementById('client-send-btn').disabled = true;
 
-     if (typeof google !== 'undefined') {
-       google.script.run
-         .withSuccessHandler(function(aiReply) {
-            const loadingEl = document.getElementById('client-pending-bubble');
-            if (loadingEl) loadingEl.remove();
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'client_chat', email: currentUserEmail, name: currentUserName, text: text })
+     })
+     .then(response => response.json())
+     .then(data => {
+         const loadingEl = document.getElementById('client-pending-bubble');
+         if (loadingEl) loadingEl.remove();
 
-            const aiBubble = document.createElement('div');
-            aiBubble.classList.add('msg-bubble', 'msg-ai');
-            
-            aiBubble.innerHTML = stripMarkdown(aiReply);
-            msgContainer.appendChild(aiBubble);
-            clientScrollToBottom();
-            
-            inputEl.disabled = false;
-            document.getElementById('client-send-btn').disabled = false;
-            inputEl.focus();
-            
-            fetchDataBundle(true); 
-         })
-         .withFailureHandler(function(e) {
-            const loadingEl = document.getElementById('client-pending-bubble');
-            if (loadingEl) loadingEl.remove();
-            alert("發送失敗，請確認網路狀態。");
-            inputEl.disabled = false;
-            document.getElementById('client-send-btn').disabled = false;
-         })
-         .handleClientMessage('TEST_WEB_CLIENT_001', '網頁測試客戶', text, null);
-     }
+         const aiBubble = document.createElement('div');
+         aiBubble.classList.add('msg-bubble', 'msg-ai');
+         
+         aiBubble.innerHTML = stripMarkdown(data.reply);
+         msgContainer.appendChild(aiBubble);
+         clientScrollToBottom();
+         
+         inputEl.disabled = false;
+         document.getElementById('client-send-btn').disabled = false;
+         inputEl.focus();
+         
+         if(currentUserRole === 'boss') fetchDataBundle(true); 
+     })
+     .catch(err => {
+         const loadingEl = document.getElementById('client-pending-bubble');
+         if (loadingEl) loadingEl.remove();
+         alert("發送失敗，請確認網路狀態。");
+         inputEl.disabled = false;
+         document.getElementById('client-send-btn').disabled = false;
+         console.error(err);
+     });
    }
 
    function clientScrollToBottom() {
@@ -747,7 +801,7 @@
    }
 
    // =========================================
-   // 老闆戰情室 JS 邏輯
+   // 老闆戰情室 JS 邏輯 (改用 fetch API)
    // =========================================
    function handleWarRoomKeyPress(event) {
      if (event.isComposing || event.keyCode === 229) return;
@@ -764,13 +818,11 @@
 
      const msgContainer = document.getElementById('warroom-chat-messages');
      
-     // 老闆提問泡泡
      const userBubble = document.createElement('div');
      userBubble.classList.add('msg-bubble', 'msg-admin'); 
      userBubble.innerHTML = stripMarkdown(text);
      msgContainer.appendChild(userBubble);
      
-     // 系統思考中泡泡
      const pendingBubble = document.createElement('div');
      pendingBubble.classList.add('msg-bubble', 'msg-warroom', 'msg-pending');
      pendingBubble.id = 'warroom-pending-bubble';
@@ -782,47 +834,33 @@
      inputEl.disabled = true;
      document.getElementById('warroom-send-btn').disabled = true;
 
-     // 透過 webhook POST 或者獨立 function 呼叫
-     // 由於戰情室也需要在前端使用，我們建置一個專屬處理函數
-     if (typeof google !== 'undefined') {
-       // 因為在 GAS 我們把 doPost 和 doGet 結合，這裡直接送 POST 或呼叫 GAS 函數
-       const payload = {
-         action: "war_room_chat",
-         userMessage: text
-       };
+     fetch(GAS_URL, {
+       method: 'POST',
+       body: JSON.stringify({ action: 'war_room_chat', userMessage: text })
+     })
+     .then(response => response.json())
+     .then(data => {
+         const loadingEl = document.getElementById('warroom-pending-bubble');
+         if (loadingEl) loadingEl.remove();
 
-       // 取得 Webhook URL (利用 get_config)
-       fetch('?action=get_config')
-         .then(res => res.json())
-         .then(config => {
-            fetch(config.gasUrl, {
-              method: 'POST',
-              body: JSON.stringify(payload)
-            })
-            .then(response => response.json())
-            .then(data => {
-               const loadingEl = document.getElementById('warroom-pending-bubble');
-               if (loadingEl) loadingEl.remove();
-
-               const aiBubble = document.createElement('div');
-               aiBubble.classList.add('msg-bubble', 'msg-warroom');
-               aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(data.reply);
-               msgContainer.appendChild(aiBubble);
-               
-               warRoomScrollToBottom();
-               inputEl.disabled = false;
-               document.getElementById('warroom-send-btn').disabled = false;
-               inputEl.focus();
-            })
-            .catch(err => {
-               const loadingEl = document.getElementById('warroom-pending-bubble');
-               if (loadingEl) loadingEl.remove();
-               alert("戰情室連線失敗，請檢查網路！");
-               inputEl.disabled = false;
-               document.getElementById('warroom-send-btn').disabled = false;
-            });
-         });
-     }
+         const aiBubble = document.createElement('div');
+         aiBubble.classList.add('msg-bubble', 'msg-warroom');
+         aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(data.reply);
+         msgContainer.appendChild(aiBubble);
+          
+         warRoomScrollToBottom();
+         inputEl.disabled = false;
+         document.getElementById('warroom-send-btn').disabled = false;
+         inputEl.focus();
+     })
+     .catch(err => {
+         const loadingEl = document.getElementById('warroom-pending-bubble');
+         if (loadingEl) loadingEl.remove();
+         alert("戰情室連線失敗，請檢查網路！");
+         inputEl.disabled = false;
+         document.getElementById('warroom-send-btn').disabled = false;
+         console.error(err);
+     });
    }
 
    function warRoomScrollToBottom() {
