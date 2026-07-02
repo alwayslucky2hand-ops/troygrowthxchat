@@ -189,7 +189,7 @@
    .send-btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
    .send-btn svg { width: 20px; height: 20px; fill: white; }
 
-   /* 🔥 新增的檔案上傳預覽區域樣式 */
+    
    .file-preview-area {
      display: none; padding: 8px 15px; background: #e8f5e9; font-size: 13px; color: #2b5a10; 
      border-top: 1px solid #ddd;
@@ -364,7 +364,7 @@
    // 全局變數：動態存放系統客服角色名稱
    let systemBotName = "智能客服";
    
-   // 🔥 全局變數：準備上傳的檔案
+   
    let pendingFileObj = null;
 
    window.onload = function() {
@@ -394,12 +394,12 @@
                 .replace(/\n/g, '<br>');
    }
 
-   // 🔥 處理選擇檔案
+   
    function handleFileUpload(event) {
      const file = event.target.files[0];
      if (!file) return;
 
-     // 更新各頁面的預覽區域顯示檔案名稱
+     
      document.querySelectorAll('.file-preview-area').forEach(el => el.style.display = 'block');
      document.querySelectorAll('.file-name-display').forEach(el => el.innerText = file.name);
 
@@ -408,13 +408,13 @@
        pendingFileObj = {
          fileName: file.name,
          mimeType: file.type,
-         base64: e.target.result.split(',')[1] // 移除 Base64 的前綴
+         base64: e.target.result.split(',')[1] 
        };
      };
      reader.readAsDataURL(file);
    }
 
-   // 🔥 清除已選擇的檔案
+   
    function clearSelectedFile() {
      pendingFileObj = null;
      document.getElementById('global-file-upload').value = "";
