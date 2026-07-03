@@ -502,8 +502,8 @@
                  bubble.classList.add('msg-ai');
              }
              bubble.innerHTML = stripMarkdown(msg.text)
-                                   .replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '')
-                                   .replace(/\[真人客服\]/g, '');
+                                 .replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '')
+                                 .replace(/\[真人客服\]/g, '');
              msgContainer.appendChild(bubble);
          });
          clientScrollToBottom();
@@ -599,7 +599,8 @@
        
        for (let i = readLen; i < history.length; i++) {
          const msg = history[i];
-         if (msg.text.includes("[系統動態觸裝追蹤提醒]")) continue;
+         
+         if (msg.text.includes("[系統動態觸裝追蹤提醒]") || msg.text.includes("[系統紀錄：")) continue;
          
          if (msg.sender === 'client') {
              clientCount++;
@@ -621,18 +622,19 @@
        infoCol.appendChild(nameSpan);
 
        if (u.labels && u.labels.length > 0) {
-           const labelsDiv = document.createElement('div');
-           labelsDiv.style.display = 'flex';
-           labelsDiv.style.gap = '4px';
-           labelsDiv.style.marginTop = '4px';
-           labelsDiv.style.overflow = 'hidden';
-           u.labels.forEach(lbl => {
-               const lSpan = document.createElement('span');
-               lSpan.className = 'badge-label';
-               lSpan.innerText = lbl;
-               labelsDiv.appendChild(lSpan);
-           });
-           infoCol.appendChild(labelsDiv);
+         const labelsDiv = document.createElement('div');
+         labelsDiv.style.display = 'flex';
+         labelsDiv.style.gap = '4px';
+         labelsDiv.style.marginTop = '4px';
+         labelsDiv.style.overflow = 'hidden';
+         labelsDiv.style.wrap = 'nowrap';
+         u.labels.forEach(lbl => {
+             const lSpan = document.createElement('span');
+             lSpan.className = 'badge-label';
+             lSpan.innerText = lbl;
+             labelsDiv.appendChild(lSpan);
+         });
+         infoCol.appendChild(labelsDiv);
        }
        
        const badgesDiv = document.createElement('div');
@@ -849,10 +851,14 @@
          const loadingEl = document.getElementById('client-pending-bubble');
          if (loadingEl) loadingEl.remove();
 
-         const aiBubble = document.createElement('div');
-         aiBubble.classList.add('msg-bubble', 'msg-ai');
-         aiBubble.innerHTML = stripMarkdown(data.reply);
-         msgContainer.appendChild(aiBubble);
+         // 🚨 新增判斷：如果不是靜默狀態，才畫出 AI 回覆泡泡
+         if (!data.isSilent) {
+             const aiBubble = document.createElement('div');
+             aiBubble.classList.add('msg-bubble', 'msg-ai');
+             aiBubble.innerHTML = stripMarkdown(data.reply);
+             msgContainer.appendChild(aiBubble);
+         }
+         
          clientScrollToBottom();
          
          inputEl.disabled = false;
@@ -937,7 +943,7 @@
          aiBubble.classList.add('msg-bubble', 'msg-warroom');
          aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(data.reply);
          msgContainer.appendChild(aiBubble);
-          
+         
          warRoomScrollToBottom();
          inputEl.disabled = false;
          document.getElementById('warroom-send-btn').disabled = false;
