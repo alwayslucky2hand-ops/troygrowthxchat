@@ -368,6 +368,7 @@
    let pendingFileObj = null;
 
    window.onload = function() {
+     // 原有：抓取系統參數
      fetch(GAS_URL, {
        method: 'POST',
        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
@@ -383,6 +384,36 @@
          }
      })
      .catch(err => console.error("系統參數載入失敗", err));
+
+     // 🚀 新增機制：讀取 LocalStorage 檢查是否已經登入過
+     const savedEmail = localStorage.getItem('growthx_user_email');
+     const savedName = localStorage.getItem('growthx_user_name');
+     const savedRole = localStorage.getItem('growthx_user_role');
+
+     if (savedEmail && savedName && savedRole) {
+         // 直接恢復全域變數狀態
+         currentUserEmail = savedEmail;
+         currentUserName = savedName;
+         currentUserRole = savedRole;
+
+         // 隱藏登入視窗
+         document.getElementById('login-overlay').style.display = 'none';
+
+         // 根據角色無縫恢復畫面
+         if(currentUserRole === 'boss') {
+           document.getElementById('tab-navbar').style.display = 'flex';
+           switchTab('admin');
+           fetchDataBundle(false);
+           pollingInterval = setInterval(() => { fetchDataBundle(true); }, 5000);
+         } else {
+           document.getElementById('tab-navbar').style.display = 'none';
+           document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
+           document.getElementById('view-client').classList.add('active-tab');
+           document.getElementById('client-chat-title').innerText = systemBotName;
+           
+           loadClientHistory(currentUserEmail);
+         }
+     }
    };
 
    function stripMarkdown(text) {
@@ -452,6 +483,11 @@
          currentUserEmail = res.email;
          currentUserName = res.name;
          currentUserRole = res.role;
+
+         // 🚀 新增機制：登入成功後，把登入資訊寫入 LocalStorage
+         localStorage.setItem('growthx_user_email', currentUserEmail);
+         localStorage.setItem('growthx_user_name', currentUserName);
+         localStorage.setItem('growthx_user_role', currentUserRole);
 
          document.getElementById('login-overlay').style.display = 'none';
 
@@ -599,7 +635,6 @@
        
        for (let i = readLen; i < history.length; i++) {
          const msg = history[i];
-         // 🚨 新增過濾 "[系統紀錄："，讓休眠中的標記不計算成未讀
          if (msg.text.includes("[系統動態觸裝追蹤提醒]") || msg.text.includes("[系統紀錄：")) continue;
          
          if (msg.sender === 'client') {
