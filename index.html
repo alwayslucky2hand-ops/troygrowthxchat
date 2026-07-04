@@ -151,15 +151,52 @@
 
    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: var(--bg-color); }
 
+    
+   .msg-wrapper {
+     display: flex;
+     align-items: flex-end;
+     gap: 6px;
+     max-width: 100%;
+   }
+   .msg-wrapper.right {
+     align-self: flex-end;
+     flex-direction: row-reverse;
+   }
+   .msg-wrapper.left {
+     align-self: flex-start;
+     flex-direction: row;
+   }
+   .msg-time {
+     font-size: 11px;
+     color: #999;
+     margin-bottom: 4px;
+     white-space: nowrap;
+   }
+   .date-divider {
+     align-self: center;
+     margin: 10px 0;
+     width: 100%;
+     text-align: center;
+   }
+   .date-divider span {
+     background-color: #e0e0e0;
+     color: #555;
+     font-size: 12px;
+     padding: 4px 12px;
+     border-radius: 12px;
+     display: inline-block;
+   }
+
+    
    .msg-bubble {
      max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px;
      line-height: 1.5; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
    }
 
-   .msg-client { align-self: flex-start; background-color: var(--client-msg-bg); border: 1px solid var(--client-msg-border); color: var(--text-dark); border-bottom-left-radius: 4px; }
-   .msg-ai { align-self: flex-end; background-color: var(--bot-msg-bg); color: #0d47a1; border-bottom-right-radius: 4px; }
-   .msg-admin { align-self: flex-end; background-color: var(--admin-msg-bg); color: var(--text-dark); border-bottom-right-radius: 4px; }
-   .msg-warroom { align-self: flex-start; background-color: var(--warroom-msg-bg); color: var(--text-dark); border: 1px solid #fbc02d; border-bottom-left-radius: 4px; }
+   .msg-client { background-color: var(--client-msg-bg); border: 1px solid var(--client-msg-border); color: var(--text-dark); border-bottom-left-radius: 4px; }
+   .msg-ai { background-color: var(--bot-msg-bg); color: #0d47a1; border-bottom-right-radius: 4px; }
+   .msg-admin { background-color: var(--admin-msg-bg); color: var(--text-dark); border-bottom-right-radius: 4px; }
+   .msg-warroom { background-color: var(--warroom-msg-bg); color: var(--text-dark); border: 1px solid #fbc02d; border-bottom-left-radius: 4px; }
    .msg-pending { opacity: 0.7; }
 
    .chat-input-area {
@@ -189,7 +226,7 @@
    .send-btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
    .send-btn svg { width: 20px; height: 20px; fill: white; }
 
-   /* 🔥 新增的檔案上傳預覽區域樣式 */
+    
    .file-preview-area {
      display: none; padding: 8px 15px; background: #e8f5e9; font-size: 13px; color: #2b5a10; 
      border-top: 1px solid #ddd;
@@ -364,11 +401,16 @@
    // 全局變數：動態存放系統客服角色名稱
    let systemBotName = "智能客服";
    
-   // 🔥 全局變數：準備上傳的檔案
+   
    let pendingFileObj = null;
 
+   
+   let lastClientDate = "";
+   let lastAdminDate = "";
+   let lastWarRoomDate = "";
+
    window.onload = function() {
-     // 原有：抓取系統參數
+     
      fetch(GAS_URL, {
        method: 'POST',
        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
@@ -385,21 +427,21 @@
      })
      .catch(err => console.error("系統參數載入失敗", err));
 
-     // 🚀 新增機制：讀取 LocalStorage 檢查是否已經登入過
+     
      const savedEmail = localStorage.getItem('growthx_user_email');
      const savedName = localStorage.getItem('growthx_user_name');
      const savedRole = localStorage.getItem('growthx_user_role');
 
      if (savedEmail && savedName && savedRole) {
-         // 直接恢復全域變數狀態
+         
          currentUserEmail = savedEmail;
          currentUserName = savedName;
          currentUserRole = savedRole;
 
-         // 隱藏登入視窗
+         
          document.getElementById('login-overlay').style.display = 'none';
 
-         // 根據角色無縫恢復畫面
+         
          if(currentUserRole === 'boss') {
            document.getElementById('tab-navbar').style.display = 'flex';
            switchTab('admin');
@@ -416,6 +458,31 @@
      }
    };
 
+   
+   function processMessageContent(rawText) {
+     if (!rawText) rawText = "";
+     const now = new Date();
+     const yyyy = now.getFullYear();
+     const mm = String(now.getMonth() + 1).padStart(2, '0');
+     const dd = String(now.getDate()).padStart(2, '0');
+     const hh = String(now.getHours()).padStart(2, '0');
+     const min = String(now.getMinutes()).padStart(2, '0');
+     
+     let msgDate = `${yyyy}-${mm}-${dd}`;
+     let msgTime = `${hh}:${min}`;
+     let cleanText = rawText;
+     
+     
+     const timeMatch = rawText.match(/\[(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2}):\d{2}\]/);
+     if (timeMatch) {
+         msgDate = timeMatch[1];
+         msgTime = timeMatch[2];
+         
+         cleanText = rawText.replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '');
+     }
+     return { date: msgDate, time: msgTime, text: cleanText };
+   }
+
    function stripMarkdown(text) {
      if (!text) return "";
      return text.replace(/\*\*(.*?)\*\*/g, '$1')
@@ -425,12 +492,12 @@
                 .replace(/\n/g, '<br>');
    }
 
-   // 🔥 處理選擇檔案
+   
    function handleFileUpload(event) {
      const file = event.target.files[0];
      if (!file) return;
 
-     // 更新各頁面的預覽區域顯示檔案名稱
+     
      document.querySelectorAll('.file-preview-area').forEach(el => el.style.display = 'block');
      document.querySelectorAll('.file-name-display').forEach(el => el.innerText = file.name);
 
@@ -439,13 +506,13 @@
        pendingFileObj = {
          fileName: file.name,
          mimeType: file.type,
-         base64: e.target.result.split(',')[1] // 移除 Base64 的前綴
+         base64: e.target.result.split(',')[1] 
        };
      };
      reader.readAsDataURL(file);
    }
 
-   // 🔥 清除已選擇的檔案
+   
    function clearSelectedFile() {
      pendingFileObj = null;
      document.getElementById('global-file-upload').value = "";
@@ -484,7 +551,7 @@
          currentUserName = res.name;
          currentUserRole = res.role;
 
-         // 🚀 新增機制：登入成功後，把登入資訊寫入 LocalStorage
+         
          localStorage.setItem('growthx_user_email', currentUserEmail);
          localStorage.setItem('growthx_user_name', currentUserName);
          localStorage.setItem('growthx_user_role', currentUserRole);
@@ -523,6 +590,7 @@
          const history = bundle.histories[email] || [];
          const msgContainer = document.getElementById('client-chat-messages');
          msgContainer.innerHTML = '';
+         lastClientDate = ""; 
          
          if(history.length === 0) {
              msgContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">歡迎！請直接發送訊息，${systemBotName}會為您提供服務。</div>`;
@@ -530,6 +598,22 @@
          }
          
          history.forEach(msg => {
+             const timeData = processMessageContent(msg.text);
+             
+             // 判斷是否需要加入日期分隔線
+             if (timeData.date !== lastClientDate) {
+                 const dateDiv = document.createElement('div');
+                 dateDiv.className = 'date-divider';
+                 dateDiv.innerHTML = `<span>${timeData.date}</span>`;
+                 msgContainer.appendChild(dateDiv);
+                 lastClientDate = timeData.date;
+             }
+
+             // 包裝時間和氣泡
+             const wrapper = document.createElement('div');
+             const isRight = (msg.sender === 'ai'); 
+             wrapper.className = 'msg-wrapper ' + (isRight ? 'right' : 'left');
+
              const bubble = document.createElement('div');
              bubble.classList.add('msg-bubble');
              if(msg.sender === 'client') {
@@ -537,10 +621,15 @@
              } else {
                  bubble.classList.add('msg-ai');
              }
-             bubble.innerHTML = stripMarkdown(msg.text)
-                                 .replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '')
-                                 .replace(/\[真人客服\]/g, '');
-             msgContainer.appendChild(bubble);
+             bubble.innerHTML = stripMarkdown(timeData.text).replace(/\[真人客服\]/g, '');
+             
+             const timeDiv = document.createElement('div');
+             timeDiv.className = 'msg-time';
+             timeDiv.innerText = timeData.time;
+
+             wrapper.appendChild(bubble);
+             wrapper.appendChild(timeDiv);
+             msgContainer.appendChild(wrapper);
          });
          clientScrollToBottom();
      })
@@ -732,12 +821,30 @@
      const isAtBottom = msgContainer.scrollHeight - msgContainer.scrollTop <= msgContainer.clientHeight + 80;
      
      msgContainer.innerHTML = '';
+     lastAdminDate = ""; // 重設日期記憶
+
      if(history.length === 0) {
          msgContainer.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">尚無對話紀錄</div>';
          return;
      }
 
      history.forEach(msg => {
+       const timeData = processMessageContent(msg.text);
+             
+       
+       if (timeData.date !== lastAdminDate) {
+           const dateDiv = document.createElement('div');
+           dateDiv.className = 'date-divider';
+           dateDiv.innerHTML = `<span>${timeData.date}</span>`;
+           msgContainer.appendChild(dateDiv);
+           lastAdminDate = timeData.date;
+       }
+
+       // 依照原有邏輯：msg-client是flex-start(左), msg-ai與msg-admin是flex-end(右)
+       const isRight = (msg.sender === 'ai' || msg.sender === 'admin');
+       const wrapper = document.createElement('div');
+       wrapper.className = 'msg-wrapper ' + (isRight ? 'right' : 'left');
+
        const bubble = document.createElement('div');
        bubble.classList.add('msg-bubble');
        
@@ -749,12 +856,18 @@
          bubble.classList.add('msg-admin');
        }
        
-       let formattedText = stripMarkdown(msg.text);
-       formattedText = formattedText.replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '');
+       let formattedText = stripMarkdown(timeData.text);
        formattedText = formattedText.replace(/\[真人客服\]/g, `<strong>${adminIcon}真人接管回覆：</strong><br>`);
        
        bubble.innerHTML = formattedText;
-       msgContainer.appendChild(bubble);
+       
+       const timeDiv = document.createElement('div');
+       timeDiv.className = 'msg-time';
+       timeDiv.innerText = timeData.time;
+
+       wrapper.appendChild(bubble);
+       wrapper.appendChild(timeDiv);
+       msgContainer.appendChild(wrapper);
      });
 
      if(isAtBottom) scrollToBottom();
@@ -778,6 +891,20 @@
      if (!text && !pendingFileObj) return;
 
      const msgContainer = document.getElementById('chat-messages');
+     
+     
+     const timeData = processMessageContent("");
+     if (timeData.date !== lastAdminDate) {
+         const dateDiv = document.createElement('div');
+         dateDiv.className = 'date-divider';
+         dateDiv.innerHTML = `<span>${timeData.date}</span>`;
+         msgContainer.appendChild(dateDiv);
+         lastAdminDate = timeData.date;
+     }
+
+     const wrapper = document.createElement('div');
+     wrapper.className = 'msg-wrapper right'; // msg-admin
+
      const bubble = document.createElement('div');
      bubble.classList.add('msg-bubble', 'msg-admin', 'msg-pending');
      
@@ -785,18 +912,26 @@
      if (pendingFileObj) displayMsg += `<br><i>📎 [附加檔案：${pendingFileObj.fileName}]</i>`;
 
      bubble.innerHTML = `<strong>${adminIcon}真人接管回覆：</strong><br>` + stripMarkdown(displayMsg);
-     msgContainer.appendChild(bubble);
+     
+     const timeDiv = document.createElement('div');
+     timeDiv.className = 'msg-time';
+     timeDiv.innerText = timeData.time;
+
+     wrapper.appendChild(bubble);
+     wrapper.appendChild(timeDiv);
+     msgContainer.appendChild(wrapper);
+     
      scrollToBottom();
      
      if (!localChatCache[selectedUserId]) localChatCache[selectedUserId] = [];
      localChatCache[selectedUserId].push({ sender: 'admin', text: displayMsg });
      readHistoryLength[selectedUserId] = localChatCache[selectedUserId].length;
 
-     // 準備 Payload (目前 send_admin_override 以純文字為主)
+     
      const payload = { 
         action: 'send_admin_override', 
         userId: selectedUserId, 
-        text: displayMsg // 若有檔案名稱，順帶把檔案標示寫給客戶看
+        text: displayMsg 
      };
 
      inputEl.value = "";
@@ -827,9 +962,9 @@
      msgContainer.scrollTop = msgContainer.scrollHeight;
    }
 
-   // =========================================
-   // 客戶端 JS 邏輯 (支援檔案上傳)
-   // =========================================
+   
+   
+   
    function handleClientKeyPress(event) {
      if (event.isComposing || event.keyCode === 229) return;
      if (event.key === "Enter" && !event.shiftKey) {
@@ -842,10 +977,24 @@
      const inputEl = document.getElementById('client-chat-input');
      const text = inputEl.value.trim();
      
-     // 🔥 防呆：沒文字也沒檔案就不發送
+     
      if (!text && !pendingFileObj) return;
 
      const msgContainer = document.getElementById('client-chat-messages');
+     
+     
+     const timeData = processMessageContent("");
+     if (timeData.date !== lastClientDate) {
+         const dateDiv = document.createElement('div');
+         dateDiv.className = 'date-divider';
+         dateDiv.innerHTML = `<span>${timeData.date}</span>`;
+         msgContainer.appendChild(dateDiv);
+         lastClientDate = timeData.date;
+     }
+
+     const wrapper = document.createElement('div');
+     wrapper.className = 'msg-wrapper left'; // msg-client
+
      const bubble = document.createElement('div');
      bubble.classList.add('msg-bubble', 'msg-client');
      
@@ -853,13 +1002,31 @@
      if (pendingFileObj) displayMsg += (text ? `<br>` : "") + `<i>📎 [已附加檔案：${pendingFileObj.fileName}]</i>`;
      
      bubble.innerHTML = stripMarkdown(displayMsg);
-     msgContainer.appendChild(bubble);
      
+     const timeDiv = document.createElement('div');
+     timeDiv.className = 'msg-time';
+     timeDiv.innerText = timeData.time;
+
+     wrapper.appendChild(bubble);
+     wrapper.appendChild(timeDiv);
+     msgContainer.appendChild(wrapper);
+     
+     // 準備待處理氣泡
+     const pendingWrapper = document.createElement('div');
+     pendingWrapper.className = 'msg-wrapper right'; 
+     pendingWrapper.id = 'client-pending-wrapper';
+
      const pendingBubble = document.createElement('div');
      pendingBubble.classList.add('msg-bubble', 'msg-ai', 'msg-pending');
-     pendingBubble.id = 'client-pending-bubble';
      pendingBubble.innerHTML = 'AI 正在思考與解析內容中...';
-     msgContainer.appendChild(pendingBubble);
+     
+     const pendingTime = document.createElement('div');
+     pendingTime.className = 'msg-time';
+     pendingTime.innerText = timeData.time; 
+
+     pendingWrapper.appendChild(pendingBubble);
+     pendingWrapper.appendChild(pendingTime);
+     msgContainer.appendChild(pendingWrapper);
 
      clientScrollToBottom();
      
@@ -883,15 +1050,34 @@
      })
      .then(response => response.json())
      .then(data => {
-         const loadingEl = document.getElementById('client-pending-bubble');
+         const loadingEl = document.getElementById('client-pending-wrapper');
          if (loadingEl) loadingEl.remove();
 
-         // 🚨 新增判斷：如果不是靜默狀態，才畫出 AI 回覆泡泡
+         
          if (!data.isSilent) {
+             const replyTimeData = processMessageContent(data.reply || "");
+             if (replyTimeData.date !== lastClientDate) {
+                 const dateDiv = document.createElement('div');
+                 dateDiv.className = 'date-divider';
+                 dateDiv.innerHTML = `<span>${replyTimeData.date}</span>`;
+                 msgContainer.appendChild(dateDiv);
+                 lastClientDate = replyTimeData.date;
+             }
+
+             const repWrapper = document.createElement('div');
+             repWrapper.className = 'msg-wrapper right';
+
              const aiBubble = document.createElement('div');
              aiBubble.classList.add('msg-bubble', 'msg-ai');
-             aiBubble.innerHTML = stripMarkdown(data.reply);
-             msgContainer.appendChild(aiBubble);
+             aiBubble.innerHTML = stripMarkdown(replyTimeData.text);
+             
+             const repTime = document.createElement('div');
+             repTime.className = 'msg-time';
+             repTime.innerText = replyTimeData.time;
+
+             repWrapper.appendChild(aiBubble);
+             repWrapper.appendChild(repTime);
+             msgContainer.appendChild(repWrapper);
          }
          
          clientScrollToBottom();
@@ -903,7 +1089,7 @@
          if(currentUserRole === 'boss') fetchDataBundle(true); 
      })
      .catch(err => {
-         const loadingEl = document.getElementById('client-pending-bubble');
+         const loadingEl = document.getElementById('client-pending-wrapper');
          if (loadingEl) loadingEl.remove();
          alert("發送失敗，請確認網路狀態。");
          inputEl.disabled = false;
@@ -918,8 +1104,8 @@
    }
 
    // =========================================
-   // 老闆戰情室 JS 邏輯 (支援檔案上傳)
-   // =========================================
+   
+   
    function handleWarRoomKeyPress(event) {
      if (event.isComposing || event.keyCode === 229) return;
      if (event.key === "Enter" && !event.shiftKey) {
@@ -932,10 +1118,24 @@
      const inputEl = document.getElementById('warroom-chat-input');
      const text = inputEl.value.trim();
      
-     // 🔥 防呆
+     
      if (!text && !pendingFileObj) return;
 
      const msgContainer = document.getElementById('warroom-chat-messages');
+     
+     
+     const timeData = processMessageContent("");
+     if (timeData.date !== lastWarRoomDate) {
+         const dateDiv = document.createElement('div');
+         dateDiv.className = 'date-divider';
+         dateDiv.innerHTML = `<span>${timeData.date}</span>`;
+         msgContainer.appendChild(dateDiv);
+         lastWarRoomDate = timeData.date;
+     }
+
+     const wrapper = document.createElement('div');
+     wrapper.className = 'msg-wrapper right'; // userBubble(msg-admin) 是右側
+
      const userBubble = document.createElement('div');
      userBubble.classList.add('msg-bubble', 'msg-admin'); 
      
@@ -943,13 +1143,31 @@
      if (pendingFileObj) displayMsg += (text ? `<br>` : "") + `<i>📎 [已附加檔案：${pendingFileObj.fileName}]</i>`;
      
      userBubble.innerHTML = stripMarkdown(displayMsg);
-     msgContainer.appendChild(userBubble);
      
+     const timeDiv = document.createElement('div');
+     timeDiv.className = 'msg-time';
+     timeDiv.innerText = timeData.time;
+
+     wrapper.appendChild(userBubble);
+     wrapper.appendChild(timeDiv);
+     msgContainer.appendChild(wrapper);
+     
+     // 待處理氣泡
+     const pendingWrapper = document.createElement('div');
+     pendingWrapper.className = 'msg-wrapper left'; 
+     pendingWrapper.id = 'warroom-pending-wrapper';
+
      const pendingBubble = document.createElement('div');
      pendingBubble.classList.add('msg-bubble', 'msg-warroom', 'msg-pending');
-     pendingBubble.id = 'warroom-pending-bubble';
      pendingBubble.innerHTML = '戰情室核心正在分析龐大資料與運算決策...';
-     msgContainer.appendChild(pendingBubble);
+     
+     const pendingTime = document.createElement('div');
+     pendingTime.className = 'msg-time';
+     pendingTime.innerText = timeData.time;
+
+     pendingWrapper.appendChild(pendingBubble);
+     pendingWrapper.appendChild(pendingTime);
+     msgContainer.appendChild(pendingWrapper);
 
      warRoomScrollToBottom();
      
@@ -971,13 +1189,32 @@
      })
      .then(response => response.json())
      .then(data => {
-         const loadingEl = document.getElementById('warroom-pending-bubble');
+         const loadingEl = document.getElementById('warroom-pending-wrapper');
          if (loadingEl) loadingEl.remove();
+
+         const replyTimeData = processMessageContent(data.reply || "");
+         if (replyTimeData.date !== lastWarRoomDate) {
+             const dateDiv = document.createElement('div');
+             dateDiv.className = 'date-divider';
+             dateDiv.innerHTML = `<span>${replyTimeData.date}</span>`;
+             msgContainer.appendChild(dateDiv);
+             lastWarRoomDate = replyTimeData.date;
+         }
+
+         const repWrapper = document.createElement('div');
+         repWrapper.className = 'msg-wrapper left';
 
          const aiBubble = document.createElement('div');
          aiBubble.classList.add('msg-bubble', 'msg-warroom');
-         aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(data.reply);
-         msgContainer.appendChild(aiBubble);
+         aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(replyTimeData.text);
+         
+         const repTime = document.createElement('div');
+         repTime.className = 'msg-time';
+         repTime.innerText = replyTimeData.time;
+
+         repWrapper.appendChild(aiBubble);
+         repWrapper.appendChild(repTime);
+         msgContainer.appendChild(repWrapper);
          
          warRoomScrollToBottom();
          inputEl.disabled = false;
@@ -985,7 +1222,7 @@
          inputEl.focus();
      })
      .catch(err => {
-         const loadingEl = document.getElementById('warroom-pending-bubble');
+         const loadingEl = document.getElementById('warroom-pending-wrapper');
          if (loadingEl) loadingEl.remove();
          alert("戰情室連線失敗，請檢查網路！");
          inputEl.disabled = false;
