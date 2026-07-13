@@ -1,1241 +1,510 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant-TW">
 <head>
- <base target="_top">
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <meta name="apple-mobile-web-app-capable" content="yes">
- <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <title>GROWTHX | AI智能企業助理與戰略系統</title>
- <style>
-   :root {
-     --primary-color: #4CAF50;
-     --bg-color: #f5f7f9;
-     --chat-bg: #ffffff;
-     --client-msg-bg: #ffffff;
-     --client-msg-border: #e0e0e0;
-     --bot-msg-bg: #e3f2fd;
-     --admin-msg-bg: #dcf8c6;
-     --warroom-msg-bg: #fff9c4; 
-     --text-dark: #333333;
-   }
-
-   body {
-     margin: 0; padding: 0;
-     font-family: 'Helvetica Neue', Helvetica, Arial, '微軟正黑體', sans-serif;
-     background-color: var(--bg-color);
-     overflow: hidden;
-   }
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>二手好麻吉 2-hand-match</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .edit-mode-input { background-color: #ffffff !important; border: 1px solid #14b8a6 !important; color: #0f766e !important; cursor: text !important; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    input[type="file"]::file-selector-button { display: none; }
+    input, select, textarea { font-size: 16px !important; }
     
-   #login-overlay {
-     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-     background-color: var(--bg-color);
-     display: flex; justify-content: center; align-items: center;
-     z-index: 1000;
-   }
-   
-   .login-box {
-     background: #fff; padding: 40px; border-radius: 12px;
-     box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 400px;
-     text-align: center;
-   }
-   
-   .login-box h2 { margin-top: 0; color: var(--primary-color); font-size: 24px;}
-   .login-box p { color: #666; margin-bottom: 20px; font-size: 14px;}
-   
-   .login-box input {
-     width: 100%; padding: 12px; margin-bottom: 15px;
-     border: 1px solid #ddd; border-radius: 6px; font-size: 15px; box-sizing: border-box;
-     outline: none; transition: border 0.3s;
-   }
-   
-   .login-box input:focus { border-color: var(--primary-color); }
-   
-   .login-box button {
-     width: 100%; padding: 14px; background-color: var(--primary-color);
-     color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold;
-     cursor: pointer; transition: background 0.3s;
-   }
-   
-   .login-box button:hover { background-color: #45a049; }
-   .login-box button:disabled { background-color: #ccc; cursor: not-allowed; }
-   
-   #login-msg { margin-top: 10px; color: #d32f2f; font-size: 14px; min-height: 20px;}
-
+    .camera-frame::before, .camera-frame::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: #14b8a6; border-style: solid; z-index: 10; }
+    .camera-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
+    .camera-frame::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
     
-   #tab-navbar {
-     display: none;
-     height: 50px;
-     background-color: #ffffff;
-     border-bottom: 1px solid #ddd;
-     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-     z-index: 100;
-     position: relative;
-   }
-
-   .tab-btn {
-     flex: 1; background: transparent; border: none; font-size: 16px;
-     font-weight: bold; color: #666; cursor: pointer; transition: all 0.3s ease;
-     outline: none; display: flex; align-items: center; justify-content: center; gap: 6px;
-   }
-
-   .tab-btn.active {
-     color: var(--primary-color); border-bottom: 3px solid var(--primary-color); background-color: #f9fdf9;
-   }
-
-   .tab-content {
-     display: none; height: calc(100vh - 50px); width: 100vw;
-   }
-
-   .tab-content.active-tab { display: block; }
-
-    
-   #app-container { display: flex; height: 100%; width: 100%; }
-
-   .sidebar {
-     width: 320px; background: #fff; border-right: 1px solid #ddd;
-     display: flex; flex-direction: column; transition: transform 0.3s ease;
-   }
-
-   .sidebar-header {
-     background-color: var(--primary-color); color: white; padding: 15px 20px;
-     text-align: center; font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10;
-   }
-
-   .user-list { flex: 1; overflow-y: auto; background-color: #fafafa; }
-
-   .user-item {
-     padding: 18px 20px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px;
-     color: var(--text-dark); display: flex; align-items: center; transition: background 0.2s;
-   }
-
-   .user-item:hover, .user-item.active {
-     background-color: #e8f5e9; border-left: 5px solid var(--primary-color);
-   }
-
-   .user-item.state-booked { background-color: #fff9c4; border-left: 5px solid #fbc02d; }
-   .user-item.state-booked.active { background-color: #fff59d; }
-   .user-item.state-completed { background-color: #e8f5e9; border-left: 5px solid #4CAF50; }
-   .user-item.state-completed.active { background-color: #c8e6c9; }
-
-   .user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold;}
-
-   .count-badges { display: flex; gap: 6px; margin-left: 8px; align-items: center; }
-
-   .badge {
-     display: flex; align-items: center; justify-content: center; font-size: 12px;
-     font-weight: bold; padding: 3px 8px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-   }
-
-   .badge-client { background-color: #dcf8c6; color: #2b5a10; }
-   .badge-ai { background-color: #e3f2fd; color: #0d47a1; }
-   
-   .badge-urgent { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; animation: pulse 2s infinite; }
-   
-   .badge-label { background-color: #e0e0e0; color: #333; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; font-weight: normal;}
-
-   @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-
-   .badge svg { width: 14px; height: 14px; margin-right: 4px; fill: currentColor; }
-
-   .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--chat-bg); position: relative; }
-
-   .chat-header {
-     background-color: var(--primary-color); color: white; padding: 15px 20px; text-align: center;
-     font-size: 18px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10;
-     display: flex; align-items: center; justify-content: center; position: relative;
-   }
-
-   .back-btn { display: none; position: absolute; left: 15px; font-size: 28px; cursor: pointer; line-height: 1; }
-
-   .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: var(--bg-color); }
-
-    
-   .msg-wrapper {
-     display: flex;
-     align-items: flex-end;
-     gap: 6px;
-     max-width: 100%;
-   }
-   .msg-wrapper.right {
-     align-self: flex-end;
-     flex-direction: row-reverse;
-   }
-   .msg-wrapper.left {
-     align-self: flex-start;
-     flex-direction: row;
-   }
-   .msg-time {
-     font-size: 11px;
-     color: #999;
-     margin-bottom: 4px;
-     white-space: nowrap;
-   }
-   .date-divider {
-     align-self: center;
-     margin: 10px 0;
-     width: 100%;
-     text-align: center;
-   }
-   .date-divider span {
-     background-color: #e0e0e0;
-     color: #555;
-     font-size: 12px;
-     padding: 4px 12px;
-     border-radius: 12px;
-     display: inline-block;
-   }
-
-    
-   .msg-bubble {
-     max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px;
-     line-height: 1.5; word-wrap: break-word; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-   }
-
-   .msg-client { background-color: var(--client-msg-bg); border: 1px solid var(--client-msg-border); color: var(--text-dark); border-bottom-left-radius: 4px; }
-   .msg-ai { background-color: var(--bot-msg-bg); color: #0d47a1; border-bottom-right-radius: 4px; }
-   .msg-admin { background-color: var(--admin-msg-bg); color: var(--text-dark); border-bottom-right-radius: 4px; }
-   .msg-warroom { background-color: var(--warroom-msg-bg); color: var(--text-dark); border: 1px solid #fbc02d; border-bottom-left-radius: 4px; }
-   .msg-pending { opacity: 0.7; }
-
-   .chat-input-area {
-     display: flex; padding: 10px 15px; background: #fff; border-top: 1px solid #ddd;
-     align-items: center; gap: 3px; padding-bottom: env(safe-area-inset-bottom, 10px);
-   }
-
-   .icon-btn {
-     background: transparent; border: none; cursor: pointer; padding: 8px; display: flex;
-     align-items: center; justify-content: center; border-radius: 50%; transition: background 0.3s;
-   }
-   .icon-btn:hover { background-color: #f1f0f0; }
-   .icon-btn svg { width: 22px; height: 22px; fill: #666; transition: fill 0.3s; }
-
-   .chat-input {
-     flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none;
-     font-size: 15px; margin: 0 5px; resize: none; font-family: inherit; box-sizing: border-box;
-     height: 45px; line-height: 1.3; overflow-y: auto;
-   }
-
-   .send-btn {
-     background-color: var(--primary-color); color: white; border: none; width: 42px; height: 42px;
-     border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center;
-     transition: background 0.3s, opacity 0.3s; flex-shrink: 0;
-   }
-   .send-btn:hover:not(:disabled) { background-color: #45a049; }
-   .send-btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
-   .send-btn svg { width: 20px; height: 20px; fill: white; }
-
-    
-   .file-preview-area {
-     display: none; padding: 8px 15px; background: #e8f5e9; font-size: 13px; color: #2b5a10; 
-     border-top: 1px solid #ddd;
-   }
-
-   @media (max-width: 768px) {
-     .sidebar { width: 100%; position: absolute; z-index: 20; height: 100%; }
-     .sidebar.hidden { transform: translateX(-100%); }
-     .chat-area { width: 100%; height: 100%; }
-     .back-btn { display: block; }
-   }
- </style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+  </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-teal-100 selection:text-teal-900 pb-24">
 
- <div id="login-overlay">
-   <div class="login-box">
-     <h2 id="login-title">AI 系統入口</h2>
-     <p>請輸入您的資訊以登入或開始對話</p>
-     <input type="text" id="login-name" placeholder="您的稱呼 (如：王小明)">
-     <input type="email" id="login-email" placeholder="您的 Email">
-     <button id="login-btn" onclick="performLogin()">進入系統</button>
-     <div id="login-msg"></div>
-   </div>
- </div>
+  <div id="toast-container" class="fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-3 pointer-events-none w-[90%] max-w-sm"></div>
 
- <div id="tab-navbar">
-   <button id="btn-admin" class="tab-btn active" onclick="switchTab('admin')">
-     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-     系統監控台
-   </button>
-   <button id="btn-client" class="tab-btn" onclick="switchTab('client')">
-     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-     客戶測試端
-   </button>
-   <button id="btn-warroom" class="tab-btn" onclick="switchTab('warroom')">
-     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-     老闆戰情室
-   </button>
- </div>
-
- <div id="view-admin" class="tab-content">
-   <div id="app-container">
-     <div id="sidebar" class="sidebar">
-       <div class="sidebar-header">系統監控台</div>
-       <div id="user-list" class="user-list">
-         <div style="padding: 20px; text-align: center; color: #888;">正在載入資料庫...</div>
-       </div>
-     </div>
-
-     <div class="chat-area">
-       <div class="chat-header">
-         <span class="back-btn" onclick="backToList()">&#8249;</span>
-         <span id="chat-title">請選擇左側客戶</span>
-       </div>
-       
-       <div id="chat-messages" class="chat-messages">
-           <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
-             點擊左側列表客戶，即可開始監看或接管對話
-           </div>
-       </div>
-
-       <div id="admin-file-preview" class="file-preview-area">
-         📎 準備上傳檔案：<span class="file-name-display" style="font-weight: bold;"></span>
-         <span onclick="clearSelectedFile()" style="margin-left: 15px; cursor: pointer; color: #d32f2f;">✖ 移除</span>
-       </div>
-
-       <div class="chat-input-area">
-         <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="多媒體">
-           <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-         </button>
-         <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="文件">
-           <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-         </button>
-         <button id="mic-btn" class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="語音">
-           <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-         </button>
-
-         <textarea id="chat-input" class="chat-input" placeholder="輸入訊息強制接管... (Shift+Enter 換行)" onkeydown="handleKeyPress(event)" disabled></textarea>
-         
-         <button id="send-btn" class="send-btn" onclick="sendMessage()" disabled>
-           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-         </button>
-       </div>
-     </div>
-   </div>
- </div>
-
- <div id="view-client" class="tab-content">
-   <div class="chat-area" style="height: 100%;">
-     <div class="chat-header">
-       <span id="client-chat-title">網頁客戶端 (資料同步記錄至雲端)</span>
-     </div>
-     
-     <div id="client-chat-messages" class="chat-messages">
-        <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
-          歡迎進入。請直接發送訊息，系統會為您提供專屬智能服務。
+  <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-slate-100">
+    <div class="max-w-4xl mx-auto px-5 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-teal-700 text-white w-8 h-8 flex items-center justify-center rounded-md font-bold text-sm tracking-widest shadow-sm">友善</div>
+        <div>
+          <h1 class="text-sm font-bold text-slate-800 tracking-wide">二手好麻吉</h1>
+          <p class="text-[10px] text-teal-600 font-medium tracking-widest uppercase">2-Hand Match</p>
         </div>
-     </div>
+      </div>
+      
+      <div id="nav-user-area" class="hidden flex items-center space-x-4 md:space-x-6">
+        <span id="header-user-name" class="text-xs font-bold text-teal-800 bg-teal-50 px-3 py-1.5 rounded-full tracking-wide"></span>
+        <button onclick="handleLogout()" class="text-xs text-slate-400 hover:text-rose-500 font-bold transition duration-300 flex items-center tracking-wider">
+          <i class="fa-solid fa-arrow-right-from-bracket md:mr-1.5"></i><span class="hidden md:inline">安全登出</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-     <div id="client-file-preview" class="file-preview-area">
-       📎 準備上傳檔案：<span class="file-name-display" style="font-weight: bold;"></span>
-       <span onclick="clearSelectedFile()" style="margin-left: 15px; cursor: pointer; color: #d32f2f;">✖ 移除</span>
-     </div>
+  <nav id="app-nav" class="hidden bg-white sticky top-16 z-30 border-b border-slate-200 overflow-x-auto hide-scroll shadow-sm">
+    <div class="max-w-4xl mx-auto w-full flex">
+      <button onclick="switchAppTab('member')" id="tab-app-member" class="flex-1 px-4 py-3 text-sm font-bold border-b-2 text-teal-700 border-teal-600 transition tracking-wide whitespace-nowrap">會員專區</button>
+      <button onclick="switchAppTab('market')" id="tab-app-market" class="flex-1 px-4 py-3 text-sm font-bold border-b-2 text-slate-400 border-transparent hover:text-teal-600 transition tracking-wide whitespace-nowrap">買賣專區</button>
+      <button onclick="switchAppTab('chat')" id="tab-app-chat" class="flex-1 px-4 py-3 text-sm font-bold border-b-2 text-slate-400 border-transparent hover:text-teal-600 transition tracking-wide whitespace-nowrap">AI 對談</button>
+      <button onclick="switchAppTab('match')" id="tab-app-match" class="flex-1 px-4 py-3 text-sm font-bold border-b-2 text-slate-400 border-transparent hover:text-teal-600 transition tracking-wide whitespace-nowrap">成交大廳</button>
+    </div>
+  </nav>
 
-     <div class="chat-input-area">
-       <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="多媒體">
-         <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-       </button>
-       <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="文件">
-         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-       </button>
-       <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="語音">
-         <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-       </button>
-
-       <textarea id="client-chat-input" class="chat-input" placeholder="請輸入訊息... (Shift+Enter 換行)" onkeydown="handleClientKeyPress(event)"></textarea>
-       
-       <button id="client-send-btn" class="send-btn" onclick="sendClientMessage()">
-         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-       </button>
-     </div>
-   </div>
- </div>
-
- <div id="view-warroom" class="tab-content">
-   <div class="chat-area" style="height: 100%;">
-     <div class="chat-header">
-       <span id="warroom-chat-title">老闆戰情室 - 麥肯錫高階戰略顧問</span>
-     </div>
-     
-     <div id="warroom-chat-messages" class="chat-messages">
-        <div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">
-          歡迎來到企業戰情室。<br><br>系統大腦已準備就緒，您可以隨時請我分析「客戶管理」、「收支記帳」或提供高商業價值的決策建議。
+  <main class="flex-grow flex items-start justify-center p-4 pt-8 w-full">
+    
+    <section id="auth-section" class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 p-8">
+      <div id="form-login" class="space-y-6 transition-opacity duration-300">
+        <div class="text-center mb-8"><h2 class="text-xl font-bold text-slate-800 tracking-wider">會員登入</h2><div class="h-0.5 w-10 bg-teal-600 mx-auto mt-3 rounded-full"></div></div>
+        <div id="login-step-1" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 mb-2">電子郵件帳戶</label>
+            <div class="relative">
+              <i class="fa-regular fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="email" id="login-email" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 text-sm text-slate-700" placeholder="name@example.com">
+            </div>
+          </div>
+          <button id="btn-request-otp" onclick="requestOTP()" class="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-sm font-bold shadow-md tracking-widest">發送登入授權碼</button>
         </div>
-     </div>
-
-     <div id="warroom-file-preview" class="file-preview-area">
-       📎 準備上傳檔案：<span class="file-name-display" style="font-weight: bold;"></span>
-       <span onclick="clearSelectedFile()" style="margin-left: 15px; cursor: pointer; color: #d32f2f;">✖ 移除</span>
-     </div>
-
-     <div class="chat-input-area">
-       <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="多媒體">
-         <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-       </button>
-       <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="文件">
-         <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-       </button>
-       <button class="icon-btn" onclick="document.getElementById('global-file-upload').click()" title="語音">
-         <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-       </button>
-
-       <textarea id="warroom-chat-input" class="chat-input" placeholder="輸入您的指令或提問，進行深層戰略分析... (Shift+Enter 換行)" onkeydown="handleWarRoomKeyPress(event)"></textarea>
-       
-       <button id="warroom-send-btn" class="send-btn" onclick="sendWarRoomMessage()">
-         <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-       </button>
-     </div>
-   </div>
- </div>
-
- <input type="file" id="global-file-upload" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" style="display: none;" onchange="handleFileUpload(event)">
-
-<script>
-   
-   const GAS_URL = "https://script.google.com/macros/s/AKfycbw3Z8FDhP9F0__m_-LNDHyMQdIr8Zq6tSfWdZXS9-mqHtkFbu16IzCFv7t9FK_no8MqmA/exec";
-
-   const adminIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-   const advisorIcon = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
-
-   // 全局變數：動態存放系統客服角色名稱
-   let systemBotName = "智能客服";
-   
-   
-   let pendingFileObj = null;
-
-   
-   let lastClientDate = "";
-   let lastAdminDate = "";
-   let lastWarRoomDate = "";
-
-   window.onload = function() {
-     
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-       body: JSON.stringify({ action: 'get_sys_config' })
-     })
-     .then(response => response.json())
-     .then(data => {
-         if (data.botName) {
-             systemBotName = data.botName;
-             document.title = systemBotName + " 企業助理與戰略系統";
-             document.getElementById('login-title').innerText = systemBotName + " 系統入口";
-             document.getElementById('client-chat-title').innerText = systemBotName;
-         }
-     })
-     .catch(err => console.error("系統參數載入失敗", err));
-
-     
-     const savedEmail = localStorage.getItem('growthx_user_email');
-     const savedName = localStorage.getItem('growthx_user_name');
-     const savedRole = localStorage.getItem('growthx_user_role');
-
-     if (savedEmail && savedName && savedRole) {
-         
-         currentUserEmail = savedEmail;
-         currentUserName = savedName;
-         currentUserRole = savedRole;
-
-         
-         document.getElementById('login-overlay').style.display = 'none';
-
-         
-         if(currentUserRole === 'boss') {
-           document.getElementById('tab-navbar').style.display = 'flex';
-           switchTab('admin');
-           fetchDataBundle(false);
-           pollingInterval = setInterval(() => { fetchDataBundle(true); }, 5000);
-         } else {
-           document.getElementById('tab-navbar').style.display = 'none';
-           document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
-           document.getElementById('view-client').classList.add('active-tab');
-           document.getElementById('client-chat-title').innerText = systemBotName;
-           
-           loadClientHistory(currentUserEmail);
-         }
-     }
-   };
-
-   
-   function processMessageContent(rawText) {
-     if (!rawText) rawText = "";
-     const now = new Date();
-     const yyyy = now.getFullYear();
-     const mm = String(now.getMonth() + 1).padStart(2, '0');
-     const dd = String(now.getDate()).padStart(2, '0');
-     const hh = String(now.getHours()).padStart(2, '0');
-     const min = String(now.getMinutes()).padStart(2, '0');
-     
-     let msgDate = `${yyyy}-${mm}-${dd}`;
-     let msgTime = `${hh}:${min}`;
-     let cleanText = rawText;
-     
-     
-     const timeMatch = rawText.match(/\[(\d{4}-\d{2}-\d{2})\s(\d{2}:\d{2}):\d{2}\]/);
-     if (timeMatch) {
-         msgDate = timeMatch[1];
-         msgTime = timeMatch[2];
-         
-         cleanText = rawText.replace(/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/g, '');
-     }
-     return { date: msgDate, time: msgTime, text: cleanText };
-   }
-
-   function stripMarkdown(text) {
-     if (!text) return "";
-     return text.replace(/\*\*(.*?)\*\*/g, '$1')
-                .replace(/\*(.*?)\*/g, '$1')
-                .replace(/#{1,6}\s?/g, '')
-                .replace(/`/g, '')
-                .replace(/\n/g, '<br>');
-   }
-
-   
-   function handleFileUpload(event) {
-     const file = event.target.files[0];
-     if (!file) return;
-
-     
-     document.querySelectorAll('.file-preview-area').forEach(el => el.style.display = 'block');
-     document.querySelectorAll('.file-name-display').forEach(el => el.innerText = file.name);
-
-     const reader = new FileReader();
-     reader.onload = function(e) {
-       pendingFileObj = {
-         fileName: file.name,
-         mimeType: file.type,
-         base64: e.target.result.split(',')[1] 
-       };
-     };
-     reader.readAsDataURL(file);
-   }
-
-   
-   function clearSelectedFile() {
-     pendingFileObj = null;
-     document.getElementById('global-file-upload').value = "";
-     document.querySelectorAll('.file-preview-area').forEach(el => el.style.display = 'none');
-   }
-   
-   let currentUserEmail = "";
-   let currentUserName = "";
-   let currentUserRole = "";
-
-   function performLogin() {
-     const name = document.getElementById('login-name').value.trim();
-     const email = document.getElementById('login-email').value.trim();
-     const msgEl = document.getElementById('login-msg');
-
-     if(!name || !email) {
-       msgEl.innerText = "請完整填寫稱呼與 Email。";
-       return;
-     }
-     if(!email.includes('@')) {
-       msgEl.innerText = "請輸入有效的 Email 格式。";
-       return;
-     }
-
-     msgEl.innerText = "驗證中，請稍候...";
-     document.getElementById('login-btn').disabled = true;
-
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-       body: JSON.stringify({ action: 'verify_login', email: email, name: name })
-     })
-     .then(response => response.json())
-     .then(res => {
-         currentUserEmail = res.email;
-         currentUserName = res.name;
-         currentUserRole = res.role;
-
-         
-         localStorage.setItem('growthx_user_email', currentUserEmail);
-         localStorage.setItem('growthx_user_name', currentUserName);
-         localStorage.setItem('growthx_user_role', currentUserRole);
-
-         document.getElementById('login-overlay').style.display = 'none';
-
-         if(currentUserRole === 'boss') {
-           document.getElementById('tab-navbar').style.display = 'flex';
-           switchTab('admin');
-           fetchDataBundle(false);
-           pollingInterval = setInterval(() => { fetchDataBundle(true); }, 5000);
-         } else {
-           document.getElementById('tab-navbar').style.display = 'none';
-           document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
-           document.getElementById('view-client').classList.add('active-tab');
-           document.getElementById('client-chat-title').innerText = systemBotName;
-           
-           loadClientHistory(currentUserEmail);
-         }
-     })
-     .catch(err => {
-         msgEl.innerText = "系統連線異常，請稍後再試。";
-         document.getElementById('login-btn').disabled = false;
-         console.error(err);
-     });
-   }
-
-   function loadClientHistory(email) {
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-       body: JSON.stringify({ action: 'get_admin_data' })
-     })
-     .then(response => response.json())
-     .then(bundle => {
-         const history = bundle.histories[email] || [];
-         const msgContainer = document.getElementById('client-chat-messages');
-         msgContainer.innerHTML = '';
-         lastClientDate = ""; 
-         
-         if(history.length === 0) {
-             msgContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: #888; margin-top: 50px;">歡迎！請直接發送訊息，${systemBotName}會為您提供服務。</div>`;
-             return;
-         }
-         
-         history.forEach(msg => {
-             const timeData = processMessageContent(msg.text);
-             
-             // 判斷是否需要加入日期分隔線
-             if (timeData.date !== lastClientDate) {
-                 const dateDiv = document.createElement('div');
-                 dateDiv.className = 'date-divider';
-                 dateDiv.innerHTML = `<span>${timeData.date}</span>`;
-                 msgContainer.appendChild(dateDiv);
-                 lastClientDate = timeData.date;
-             }
-
-             // 包裝時間和氣泡
-             const wrapper = document.createElement('div');
-             const isRight = (msg.sender === 'ai'); 
-             wrapper.className = 'msg-wrapper ' + (isRight ? 'right' : 'left');
-
-             const bubble = document.createElement('div');
-             bubble.classList.add('msg-bubble');
-             if(msg.sender === 'client') {
-                 bubble.classList.add('msg-client');
-             } else {
-                 bubble.classList.add('msg-ai');
-             }
-             bubble.innerHTML = stripMarkdown(timeData.text).replace(/\[真人客服\]/g, '');
-             
-             const timeDiv = document.createElement('div');
-             timeDiv.className = 'msg-time';
-             timeDiv.innerText = timeData.time;
-
-             wrapper.appendChild(bubble);
-             wrapper.appendChild(timeDiv);
-             msgContainer.appendChild(wrapper);
-         });
-         clientScrollToBottom();
-     })
-     .catch(err => console.error(err));
-   }
-
-   function switchTab(tabId) {
-     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-     document.querySelectorAll('.tab-content').forEach(view => view.classList.remove('active-tab'));
-     
-     document.getElementById('btn-' + tabId).classList.add('active');
-     document.getElementById('view-' + tabId).classList.add('active-tab');
-   }
-
-   let selectedUserId = null;
-   let pollingInterval = null;
-   let pendingRequests = 0;
-   let localChatCache = {};
-   let localUserCache = [];
-   let readHistoryLength = {};
-
-   function fetchDataBundle(isSilent) {
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-       body: JSON.stringify({ action: 'get_admin_data' })
-     })
-     .then(response => response.json())
-     .then(bundle => handleDataBundle(bundle, isSilent))
-     .catch(err => console.error("資料獲取失敗:", err));
-   }
-
-   function handleDataBundle(bundle, isSilent) {
-     localUserCache = bundle.users;
-     
-     if (pendingRequests > 0 && selectedUserId) {
-         Object.keys(bundle.histories).forEach(uid => {
-           if (uid !== selectedUserId) {
-             localChatCache[uid] = bundle.histories[uid];
-           }
-         });
-     } else {
-         const prevStr = JSON.stringify(localChatCache[selectedUserId] || []);
-         const newStr = JSON.stringify(bundle.histories[selectedUserId] || []);
-         
-         localChatCache = bundle.histories;
-
-         if (selectedUserId) {
-           readHistoryLength[selectedUserId] = (localChatCache[selectedUserId] || []).length;
-           
-           if (isSilent && prevStr === newStr) {
-               renderUserList();
-               return;
-           }
-           renderChatHistory(localChatCache[selectedUserId] || []);
-         }
-     }
-     
-     renderUserList();
-   }
-
-   function renderUserList() {
-     const listEl = document.getElementById('user-list');
-     const uniqueUsers = [];
-     const seenIds = new Set();
-     localUserCache.forEach(u => {
-       if (!seenIds.has(u.userId)) {
-         seenIds.add(u.userId);
-         uniqueUsers.push(u);
-       }
-     });
-
-     if(uniqueUsers.length === 0) {
-         listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">目前尚無客戶紀錄</div>';
-         return;
-     }
-     
-     listEl.innerHTML = '';
-     uniqueUsers.forEach(u => {
-       let userClass = 'user-item';
-       if (u.userId === selectedUserId) userClass += ' active';
-       if (u.bookingState === 'booked') userClass += ' state-booked';
-       else if (u.bookingState === 'completed') userClass += ' state-completed';
-
-       const item = document.createElement('div');
-       item.className = userClass;
-       
-       let clientCount = 0;
-       let aiCount = 0;
-       const history = localChatCache[u.userId] || [];
-       const readLen = readHistoryLength[u.userId] || 0;
-       
-       for (let i = readLen; i < history.length; i++) {
-         const msg = history[i];
-         if (msg.text.includes("[系統動態觸裝追蹤提醒]") || msg.text.includes("[系統紀錄：")) continue;
-         
-         if (msg.sender === 'client') {
-             clientCount++;
-         } else if (msg.sender === 'ai') {
-             aiCount++;
-         }
-       }
-
-       const infoCol = document.createElement('div');
-       infoCol.style.flex = '1';
-       infoCol.style.overflow = 'hidden';
-       infoCol.style.display = 'flex';
-       infoCol.style.flexDirection = 'column';
-       infoCol.style.justifyContent = 'center';
-
-       const nameSpan = document.createElement('span');
-       nameSpan.className = 'user-name';
-       nameSpan.innerText = u.userName;
-       infoCol.appendChild(nameSpan);
-
-       if (u.labels && u.labels.length > 0) {
-         const labelsDiv = document.createElement('div');
-         labelsDiv.style.display = 'flex';
-         labelsDiv.style.gap = '4px';
-         labelsDiv.style.marginTop = '4px';
-         labelsDiv.style.overflow = 'hidden';
-         labelsDiv.style.wrap = 'nowrap';
-         u.labels.forEach(lbl => {
-             const lSpan = document.createElement('span');
-             lSpan.className = 'badge-label';
-             lSpan.innerText = lbl;
-             labelsDiv.appendChild(lSpan);
-         });
-         infoCol.appendChild(labelsDiv);
-       }
-       
-       const badgesDiv = document.createElement('div');
-       badgesDiv.className = 'count-badges';
-       
-       if (u.isUrgent) {
-         const urgentBadge = document.createElement('div');
-         urgentBadge.className = 'badge-urgent badge';
-         urgentBadge.title = "超過24小時未回覆";
-         urgentBadge.innerText = "急";
-         badgesDiv.appendChild(urgentBadge);
-       }
-
-       if (clientCount > 0) {
-         const clientBadge = document.createElement('div');
-         clientBadge.className = 'badge badge-client';
-         clientBadge.title = "客戶新訊息量";
-         clientBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${clientCount}`;
-         badgesDiv.appendChild(clientBadge);
-       }
-       
-       if (aiCount > 0) {
-         const aiBadge = document.createElement('div');
-         aiBadge.className = 'badge badge-ai';
-         aiBadge.title = "AI新回覆量";
-         aiBadge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.36 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> ${aiCount}`;
-         badgesDiv.appendChild(aiBadge);
-       }
-
-       item.appendChild(infoCol);
-       item.appendChild(badgesDiv);
-
-       item.onclick = () => selectUser(u.userId, u.userName);
-       listEl.appendChild(item);
-     });
-   }
-
-   function selectUser(userId, userName) {
-     selectedUserId = userId;
-     pendingRequests = 0;
-     readHistoryLength[userId] = (localChatCache[userId] || []).length;
-     document.getElementById('chat-title').innerText = userName + " 的對話";
-     document.getElementById('chat-input').disabled = false;
-     document.getElementById('send-btn').disabled = false;
-     
-     if (window.innerWidth <= 768) {
-       document.getElementById('sidebar').classList.add('hidden');
-     }
-     
-     renderChatHistory(localChatCache[userId] || []);
-     renderUserList();
-   }
-
-   function backToList() {
-     document.getElementById('sidebar').classList.remove('hidden');
-   }
-
-   function renderChatHistory(history) {
-     const msgContainer = document.getElementById('chat-messages');
-     const isAtBottom = msgContainer.scrollHeight - msgContainer.scrollTop <= msgContainer.clientHeight + 80;
-     
-     msgContainer.innerHTML = '';
-     lastAdminDate = ""; // 重設日期記憶
-
-     if(history.length === 0) {
-         msgContainer.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">尚無對話紀錄</div>';
-         return;
-     }
-
-     history.forEach(msg => {
-       const timeData = processMessageContent(msg.text);
-             
-       
-       if (timeData.date !== lastAdminDate) {
-           const dateDiv = document.createElement('div');
-           dateDiv.className = 'date-divider';
-           dateDiv.innerHTML = `<span>${timeData.date}</span>`;
-           msgContainer.appendChild(dateDiv);
-           lastAdminDate = timeData.date;
-       }
-
-       // 依照原有邏輯：msg-client是flex-start(左), msg-ai與msg-admin是flex-end(右)
-       const isRight = (msg.sender === 'ai' || msg.sender === 'admin');
-       const wrapper = document.createElement('div');
-       wrapper.className = 'msg-wrapper ' + (isRight ? 'right' : 'left');
-
-       const bubble = document.createElement('div');
-       bubble.classList.add('msg-bubble');
-       
-       if (msg.sender === 'client') {
-         bubble.classList.add('msg-client');
-       } else if (msg.sender === 'ai') {
-         bubble.classList.add('msg-ai');
-       } else {
-         bubble.classList.add('msg-admin');
-       }
-       
-       let formattedText = stripMarkdown(timeData.text);
-       formattedText = formattedText.replace(/\[真人客服\]/g, `<strong>${adminIcon}真人接管回覆：</strong><br>`);
-       
-       bubble.innerHTML = formattedText;
-       
-       const timeDiv = document.createElement('div');
-       timeDiv.className = 'msg-time';
-       timeDiv.innerText = timeData.time;
-
-       wrapper.appendChild(bubble);
-       wrapper.appendChild(timeDiv);
-       msgContainer.appendChild(wrapper);
-     });
-
-     if(isAtBottom) scrollToBottom();
-   }
-
-   function handleKeyPress(event) {
-     if (event.isComposing || event.keyCode === 229) return;
-     if (event.key === "Enter" && !event.shiftKey) {
-       event.preventDefault();
-       sendMessage();
-     }
-   }
-
-   function sendMessage() {
-     if (!selectedUserId) return;
-
-     const inputEl = document.getElementById('chat-input');
-     const text = inputEl.value.trim();
-     
-     // 若無文字也無檔案，不執行
-     if (!text && !pendingFileObj) return;
-
-     const msgContainer = document.getElementById('chat-messages');
-     
-     
-     const timeData = processMessageContent("");
-     if (timeData.date !== lastAdminDate) {
-         const dateDiv = document.createElement('div');
-         dateDiv.className = 'date-divider';
-         dateDiv.innerHTML = `<span>${timeData.date}</span>`;
-         msgContainer.appendChild(dateDiv);
-         lastAdminDate = timeData.date;
-     }
-
-     const wrapper = document.createElement('div');
-     wrapper.className = 'msg-wrapper right'; // msg-admin
-
-     const bubble = document.createElement('div');
-     bubble.classList.add('msg-bubble', 'msg-admin', 'msg-pending');
-     
-     let displayMsg = text || "[傳送了檔案給客戶]";
-     if (pendingFileObj) displayMsg += `<br><i>📎 [附加檔案：${pendingFileObj.fileName}]</i>`;
-
-     bubble.innerHTML = `<strong>${adminIcon}真人接管回覆：</strong><br>` + stripMarkdown(displayMsg);
-     
-     const timeDiv = document.createElement('div');
-     timeDiv.className = 'msg-time';
-     timeDiv.innerText = timeData.time;
-
-     wrapper.appendChild(bubble);
-     wrapper.appendChild(timeDiv);
-     msgContainer.appendChild(wrapper);
-     
-     scrollToBottom();
-     
-     if (!localChatCache[selectedUserId]) localChatCache[selectedUserId] = [];
-     localChatCache[selectedUserId].push({ sender: 'admin', text: displayMsg });
-     readHistoryLength[selectedUserId] = localChatCache[selectedUserId].length;
-
-     
-     const payload = { 
-        action: 'send_admin_override', 
-        userId: selectedUserId, 
-        text: displayMsg 
-     };
-
-     inputEl.value = "";
-     inputEl.focus();
-     clearSelectedFile();
-
-     pendingRequests++;
-
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-       body: JSON.stringify(payload)
-     })
-     .then(response => response.json())
-     .then(res => {
-         pendingRequests--;
-         if(pendingRequests === 0) fetchDataBundle(true);
-     })
-     .catch(err => {
-         pendingRequests--;
-         alert("接管送出異常，請確認網路狀態。");
-         console.error(err);
-     });
-   }
-
-   function scrollToBottom() {
-     const msgContainer = document.getElementById('chat-messages');
-     msgContainer.scrollTop = msgContainer.scrollHeight;
-   }
-
-   
-   
-   
-   function handleClientKeyPress(event) {
-     if (event.isComposing || event.keyCode === 229) return;
-     if (event.key === "Enter" && !event.shiftKey) {
-       event.preventDefault();
-       sendClientMessage();
-     }
-   }
-
-   function sendClientMessage() {
-     const inputEl = document.getElementById('client-chat-input');
-     const text = inputEl.value.trim();
-     
-     
-     if (!text && !pendingFileObj) return;
-
-     const msgContainer = document.getElementById('client-chat-messages');
-     
-     
-     const timeData = processMessageContent("");
-     if (timeData.date !== lastClientDate) {
-         const dateDiv = document.createElement('div');
-         dateDiv.className = 'date-divider';
-         dateDiv.innerHTML = `<span>${timeData.date}</span>`;
-         msgContainer.appendChild(dateDiv);
-         lastClientDate = timeData.date;
-     }
-
-     const wrapper = document.createElement('div');
-     wrapper.className = 'msg-wrapper left'; // msg-client
-
-     const bubble = document.createElement('div');
-     bubble.classList.add('msg-bubble', 'msg-client');
-     
-     let displayMsg = text;
-     if (pendingFileObj) displayMsg += (text ? `<br>` : "") + `<i>📎 [已附加檔案：${pendingFileObj.fileName}]</i>`;
-     
-     bubble.innerHTML = stripMarkdown(displayMsg);
-     
-     const timeDiv = document.createElement('div');
-     timeDiv.className = 'msg-time';
-     timeDiv.innerText = timeData.time;
-
-     wrapper.appendChild(bubble);
-     wrapper.appendChild(timeDiv);
-     msgContainer.appendChild(wrapper);
-     
-     // 準備待處理氣泡
-     const pendingWrapper = document.createElement('div');
-     pendingWrapper.className = 'msg-wrapper right'; 
-     pendingWrapper.id = 'client-pending-wrapper';
-
-     const pendingBubble = document.createElement('div');
-     pendingBubble.classList.add('msg-bubble', 'msg-ai', 'msg-pending');
-     pendingBubble.innerHTML = 'AI 正在思考與解析內容中...';
-     
-     const pendingTime = document.createElement('div');
-     pendingTime.className = 'msg-time';
-     pendingTime.innerText = timeData.time; 
-
-     pendingWrapper.appendChild(pendingBubble);
-     pendingWrapper.appendChild(pendingTime);
-     msgContainer.appendChild(pendingWrapper);
-
-     clientScrollToBottom();
-     
-     const payload = { 
-       action: 'client_chat', 
-       email: currentUserEmail, 
-       name: currentUserName, 
-       text: text || `[用戶傳送了多媒體/檔案：${pendingFileObj.fileName}]`, 
-       fileObj: pendingFileObj 
-     };
-
-     inputEl.value = "";
-     inputEl.disabled = true;
-     document.getElementById('client-send-btn').disabled = true;
-     clearSelectedFile();
-
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-       body: JSON.stringify(payload)
-     })
-     .then(response => response.json())
-     .then(data => {
-         const loadingEl = document.getElementById('client-pending-wrapper');
-         if (loadingEl) loadingEl.remove();
-
-         
-         if (!data.isSilent) {
-             const replyTimeData = processMessageContent(data.reply || "");
-             if (replyTimeData.date !== lastClientDate) {
-                 const dateDiv = document.createElement('div');
-                 dateDiv.className = 'date-divider';
-                 dateDiv.innerHTML = `<span>${replyTimeData.date}</span>`;
-                 msgContainer.appendChild(dateDiv);
-                 lastClientDate = replyTimeData.date;
-             }
-
-             const repWrapper = document.createElement('div');
-             repWrapper.className = 'msg-wrapper right';
-
-             const aiBubble = document.createElement('div');
-             aiBubble.classList.add('msg-bubble', 'msg-ai');
-             aiBubble.innerHTML = stripMarkdown(replyTimeData.text);
-             
-             const repTime = document.createElement('div');
-             repTime.className = 'msg-time';
-             repTime.innerText = replyTimeData.time;
-
-             repWrapper.appendChild(aiBubble);
-             repWrapper.appendChild(repTime);
-             msgContainer.appendChild(repWrapper);
-         }
-         
-         clientScrollToBottom();
-         
-         inputEl.disabled = false;
-         document.getElementById('client-send-btn').disabled = false;
-         inputEl.focus();
-         
-         if(currentUserRole === 'boss') fetchDataBundle(true); 
-     })
-     .catch(err => {
-         const loadingEl = document.getElementById('client-pending-wrapper');
-         if (loadingEl) loadingEl.remove();
-         alert("發送失敗，請確認網路狀態。");
-         inputEl.disabled = false;
-         document.getElementById('client-send-btn').disabled = false;
-         console.error(err);
-     });
-   }
-
-   function clientScrollToBottom() {
-     const msgContainer = document.getElementById('client-chat-messages');
-     msgContainer.scrollTop = msgContainer.scrollHeight;
-   }
-
-   // =========================================
-   
-   
-   function handleWarRoomKeyPress(event) {
-     if (event.isComposing || event.keyCode === 229) return;
-     if (event.key === "Enter" && !event.shiftKey) {
-       event.preventDefault();
-       sendWarRoomMessage();
-     }
-   }
-
-   function sendWarRoomMessage() {
-     const inputEl = document.getElementById('warroom-chat-input');
-     const text = inputEl.value.trim();
-     
-     
-     if (!text && !pendingFileObj) return;
-
-     const msgContainer = document.getElementById('warroom-chat-messages');
-     
-     
-     const timeData = processMessageContent("");
-     if (timeData.date !== lastWarRoomDate) {
-         const dateDiv = document.createElement('div');
-         dateDiv.className = 'date-divider';
-         dateDiv.innerHTML = `<span>${timeData.date}</span>`;
-         msgContainer.appendChild(dateDiv);
-         lastWarRoomDate = timeData.date;
-     }
-
-     const wrapper = document.createElement('div');
-     wrapper.className = 'msg-wrapper right'; // userBubble(msg-admin) 是右側
-
-     const userBubble = document.createElement('div');
-     userBubble.classList.add('msg-bubble', 'msg-admin'); 
-     
-     let displayMsg = text;
-     if (pendingFileObj) displayMsg += (text ? `<br>` : "") + `<i>📎 [已附加檔案：${pendingFileObj.fileName}]</i>`;
-     
-     userBubble.innerHTML = stripMarkdown(displayMsg);
-     
-     const timeDiv = document.createElement('div');
-     timeDiv.className = 'msg-time';
-     timeDiv.innerText = timeData.time;
-
-     wrapper.appendChild(userBubble);
-     wrapper.appendChild(timeDiv);
-     msgContainer.appendChild(wrapper);
-     
-     // 待處理氣泡
-     const pendingWrapper = document.createElement('div');
-     pendingWrapper.className = 'msg-wrapper left'; 
-     pendingWrapper.id = 'warroom-pending-wrapper';
-
-     const pendingBubble = document.createElement('div');
-     pendingBubble.classList.add('msg-bubble', 'msg-warroom', 'msg-pending');
-     pendingBubble.innerHTML = '戰情室核心正在分析龐大資料與運算決策...';
-     
-     const pendingTime = document.createElement('div');
-     pendingTime.className = 'msg-time';
-     pendingTime.innerText = timeData.time;
-
-     pendingWrapper.appendChild(pendingBubble);
-     pendingWrapper.appendChild(pendingTime);
-     msgContainer.appendChild(pendingWrapper);
-
-     warRoomScrollToBottom();
-     
-     const payload = { 
-       action: 'war_room_chat', 
-       userMessage: text || `[老闆傳送了圖片/檔案：${pendingFileObj.fileName}]`,
-       fileObj: pendingFileObj
-     };
-
-     inputEl.value = "";
-     inputEl.disabled = true;
-     document.getElementById('warroom-send-btn').disabled = true;
-     clearSelectedFile();
-
-     fetch(GAS_URL, {
-       method: 'POST',
-       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-       body: JSON.stringify(payload)
-     })
-     .then(response => response.json())
-     .then(data => {
-         const loadingEl = document.getElementById('warroom-pending-wrapper');
-         if (loadingEl) loadingEl.remove();
-
-         const replyTimeData = processMessageContent(data.reply || "");
-         if (replyTimeData.date !== lastWarRoomDate) {
-             const dateDiv = document.createElement('div');
-             dateDiv.className = 'date-divider';
-             dateDiv.innerHTML = `<span>${replyTimeData.date}</span>`;
-             msgContainer.appendChild(dateDiv);
-             lastWarRoomDate = replyTimeData.date;
-         }
-
-         const repWrapper = document.createElement('div');
-         repWrapper.className = 'msg-wrapper left';
-
-         const aiBubble = document.createElement('div');
-         aiBubble.classList.add('msg-bubble', 'msg-warroom');
-         aiBubble.innerHTML = `<strong>${advisorIcon}戰情顧問：</strong><br>` + stripMarkdown(replyTimeData.text);
-         
-         const repTime = document.createElement('div');
-         repTime.className = 'msg-time';
-         repTime.innerText = replyTimeData.time;
-
-         repWrapper.appendChild(aiBubble);
-         repWrapper.appendChild(repTime);
-         msgContainer.appendChild(repWrapper);
-         
-         warRoomScrollToBottom();
-         inputEl.disabled = false;
-         document.getElementById('warroom-send-btn').disabled = false;
-         inputEl.focus();
-     })
-     .catch(err => {
-         const loadingEl = document.getElementById('warroom-pending-wrapper');
-         if (loadingEl) loadingEl.remove();
-         alert("戰情室連線失敗，請檢查網路！");
-         inputEl.disabled = false;
-         document.getElementById('warroom-send-btn').disabled = false;
-         console.error(err);
-     });
-   }
-
-   function warRoomScrollToBottom() {
-     const msgContainer = document.getElementById('warroom-chat-messages');
-     msgContainer.scrollTop = msgContainer.scrollHeight;
-   }
-
- </script>
+        <div id="login-step-2" class="hidden space-y-5">
+          <div class="bg-teal-50/50 p-4 rounded-xl border border-teal-100 flex items-start space-x-3"><i class="fa-regular fa-circle-check text-teal-600 mt-0.5"></i><p class="text-xs text-teal-700 leading-relaxed tracking-wide">授權碼已發送至信箱，請查收並輸入。</p></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-2 text-center tracking-widest">六位數授權碼</label><input type="text" id="login-otp" maxlength="6" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 text-center tracking-[0.5em] text-lg font-bold rounded-xl focus:border-teal-500 font-mono" placeholder="000000"></div>
+          <button id="btn-verify-otp" onclick="verifyOTP()" class="w-full py-3 bg-slate-800 text-white rounded-xl text-sm font-bold shadow-md tracking-widest">驗證並前往安全確認</button>
+          <button onclick="resetLoginToStep(1)" class="w-full py-2 text-xs text-slate-400 hover:text-slate-600 transition font-bold">返回重新輸入信箱</button>
+        </div>
+        <div id="login-step-3" class="hidden space-y-5">
+          <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100 flex items-start space-x-3"><i class="fa-solid fa-shield-halved text-amber-600 mt-0.5"></i><p class="text-xs text-amber-700 leading-relaxed tracking-wide">系統已啟動隨機身份確認。</p></div>
+          <div><label id="challenge-label" class="block text-xs font-bold text-slate-600 mb-2 tracking-wide"></label><div id="challenge-input-area"></div></div>
+          <button id="btn-verify-challenge" onclick="verifyChallengeAndLogin()" class="w-full py-3 bg-teal-700 text-white rounded-xl text-sm font-bold shadow-md tracking-widest">確認並登入</button>
+        </div>
+        <div class="text-center pt-6 border-t border-slate-100"><p class="text-xs text-slate-500 tracking-wide font-bold">尚未建立帳戶？ <button onclick="switchAuthMode('register')" class="text-teal-700 font-bold hover:text-teal-900 ml-1">快速註冊</button></p></div>
+      </div>
+
+      <div id="form-register" class="hidden space-y-5 transition-opacity duration-300">
+        <div class="text-center mb-8"><h2 class="text-xl font-bold text-slate-800 tracking-wider">快速註冊</h2><div class="h-0.5 w-10 bg-teal-600 mx-auto mt-3 rounded-full"></div></div>
+        <div class="space-y-4">
+          <div><label class="block text-xs font-bold text-slate-500 mb-2">電子郵件</label><input type="email" id="reg-email" class="w-full px-4 py-2.5 bg-slate-50 border rounded-xl focus:border-teal-500 text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-2">真實姓名</label><input type="text" id="reg-name" class="w-full px-4 py-2.5 bg-slate-50 border rounded-xl focus:border-teal-500 text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-2">出生年月日</label><input type="date" id="reg-birthday" class="w-full px-4 py-2.5 bg-slate-50 border rounded-xl focus:border-teal-500 text-sm"></div>
+          <div><label class="block text-xs font-bold text-slate-500 mb-2">聯絡電話</label><div class="flex space-x-2"><input type="text" id="reg-phone-1" maxlength="4" placeholder="09XX" class="w-1/3 px-3 py-2.5 bg-slate-50 border rounded-xl text-center font-mono text-sm" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length===4)document.getElementById('reg-phone-2').focus();"><span class="text-slate-300 font-bold mt-2">-</span><input type="text" id="reg-phone-2" maxlength="6" placeholder="XXXXXX" class="w-2/3 px-3 py-2.5 bg-slate-50 border rounded-xl text-center font-mono text-sm" oninput="this.value=this.value.replace(/[^0-9]/g,'');"></div></div>
+        </div>
+        <button id="btn-submit-reg" onclick="submitRegistration()" class="w-full mt-8 py-3 bg-slate-800 text-white rounded-xl text-sm font-bold shadow-md tracking-widest">完成設定並提交</button>
+        <div class="text-center pt-6 border-t border-slate-100"><p class="text-xs text-slate-500 font-bold">已有會員帳戶？ <button onclick="switchAuthMode('login')" class="text-teal-700 hover:text-teal-900 ml-1">返回登入</button></p></div>
+      </div>
+    </section>
+
+    <div id="app-container" class="hidden w-full max-w-4xl">
+      
+      <section id="tab-content-member" class="w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in">
+        <div class="bg-slate-800 p-8 text-white relative overflow-hidden">
+          <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-teal-200 via-transparent to-transparent"></div>
+          <div class="relative z-10 flex justify-between items-start">
+            <div><h2 class="text-2xl font-bold tracking-wider">歡迎回來，<span id="welcome-name" class="text-teal-400"></span></h2><p class="text-slate-400 text-xs mt-2 flex items-center"><i class="fa-solid fa-leaf text-teal-500 mr-2"></i>您的每一筆交易都在減少碳足跡。</p></div>
+            <button id="btn-toggle-edit" onclick="toggleEditMode()" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold backdrop-blur-sm border border-white/10 flex items-center tracking-widest"><i class="fa-regular fa-pen-to-square mr-2"></i>編輯設定</button>
+          </div>
+        </div>
+        <div class="p-8 space-y-10">
+          <div>
+            <div class="flex items-center mb-5"><i class="fa-regular fa-id-card text-teal-600 mr-3 text-lg"></i><h3 class="text-sm font-bold text-slate-700 tracking-wider">基本資料</h3></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div><label class="block text-[11px] font-bold text-slate-400 mb-1.5">會員代碼 (唯讀)</label><input type="text" id="prof-member-code" readonly class="w-full px-4 py-2 bg-slate-50 border rounded-xl font-mono text-xs cursor-not-allowed"></div>
+              <div><label class="block text-[11px] font-bold text-slate-400 mb-1.5">電子信箱 (唯讀)</label><input type="email" id="prof-email" readonly class="w-full px-4 py-2 bg-slate-50 border rounded-xl text-sm cursor-not-allowed"></div>
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5">真實姓名</label><input type="text" id="prof-name" readonly class="prof-editable w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm transition"></div>
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5">出生年月日</label><input type="date" id="prof-birthday" readonly class="prof-editable w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm transition"></div>
+              <div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 mb-1.5">聯絡電話</label><input type="text" id="prof-phone" readonly class="prof-editable w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-mono tracking-widest transition"></div>
+            </div>
+          </div>
+          <div class="pt-8 border-t border-slate-100">
+            <div class="flex justify-between items-end mb-5">
+              <div class="flex items-center"><i class="fa-solid fa-building-columns text-slate-400 mr-3 text-lg"></i><h3 class="text-sm font-bold text-slate-700 tracking-wider">財務撥款設定</h3></div>
+              <div id="ai-upload-area" class="hidden"><input type="file" id="bank-image-input" accept="image/*" class="hidden" onchange="handleBankImageUpload(event)"><button onclick="document.getElementById('bank-image-input').click()" class="text-[11px] bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-lg font-bold flex items-center shadow-sm"><i class="fa-solid fa-microchip mr-1.5"></i> AI 識別匯入</button></div>
+            </div>
+            <div id="bank-image-container" class="mb-5 hidden"><label class="block text-[11px] font-bold text-slate-500 mb-2">存摺封面</label><div class="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center p-2"><img id="prof-bank-image" src="" class="h-full object-contain"></div></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5">銀行代碼</label><input type="text" id="prof-bank-code" readonly class="prof-editable w-full px-4 py-2 bg-slate-50 border rounded-xl font-mono text-sm"></div>
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5">金融機構名稱</label><input type="text" id="prof-bank-name" readonly class="prof-editable w-full px-4 py-2 bg-slate-50 border rounded-xl text-sm"></div>
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5">帳戶號碼</label><input type="text" id="prof-bank-account" readonly class="prof-editable w-full px-4 py-2 bg-slate-50 border rounded-xl font-mono text-sm"></div>
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1.5">戶名</label><input type="text" id="prof-account-name" readonly class="prof-editable w-full px-4 py-2 bg-slate-50 border rounded-xl text-sm"></div>
+            </div>
+          </div>
+          <div id="save-action-area" class="mt-8 flex justify-end hidden border-t border-slate-100 pt-6">
+            <button onclick="toggleEditMode(false)" class="px-5 py-2.5 text-slate-500 font-bold transition mr-4">取消</button>
+            <button onclick="saveProfile()" class="px-6 py-2.5 bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md"><i class="fa-solid fa-check mr-2"></i>儲存並鎖定</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-content-market" class="hidden w-full">
+        <div class="flex bg-slate-200/50 p-1 rounded-xl mb-6 shadow-inner w-full max-w-sm mx-auto md:mx-0">
+          <button onclick="switchMarketTab('seller')" id="subtab-seller" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 bg-white text-teal-700 shadow shadow-slate-200 tracking-widest">賣家物件</button>
+          <button onclick="switchMarketTab('buyer')" id="subtab-buyer" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 text-slate-500 hover:text-slate-700 tracking-widest">買家需求</button>
+        </div>
+
+        <div id="view-seller" class="block animate-fade-in">
+          <div class="flex justify-between items-end mb-4 gap-4">
+            <div><h2 class="text-xl font-bold text-slate-800 tracking-wider">我的上架物件</h2><p class="text-xs text-slate-500 mt-1 font-bold">極速預覽與背景同步儲存。</p></div>
+            <button onclick="openSellerModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold shadow-md tracking-widest flex items-center text-sm transition"><i class="fa-solid fa-camera-retro mr-2"></i> 上架物件</button>
+          </div>
+          <div id="seller-items-container" class="space-y-4"></div>
+        </div>
+
+        <div id="view-buyer" class="hidden animate-fade-in">
+          <div class="flex justify-between items-end mb-4 gap-4">
+            <div><h2 class="text-xl font-bold text-slate-800 tracking-wider">我的徵求需求</h2><p class="text-xs text-slate-500 mt-1 font-bold">免填預算，平台幫您找最便宜！</p></div>
+            <button onclick="openBuyerModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md tracking-widest flex items-center text-sm transition"><i class="fa-solid fa-bullhorn mr-2"></i> 發佈需求</button>
+          </div>
+          <div id="buyer-reqs-container" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <section id="tab-content-chat" class="hidden w-full p-10 text-center text-slate-500 font-bold"><i class="fa-solid fa-robot text-5xl mb-4 text-slate-300 block"></i>AI 智慧對談與媒合引擎，持續開發中...</section>
+
+      <section id="tab-content-match" class="hidden w-full p-10 text-center text-slate-500 font-bold"><i class="fa-solid fa-handshake text-5xl mb-4 text-slate-300 block"></i>大廳展示準備中，敬請期待...</section>
+    </div>
+  </main>
+
+  <div id="seller-modal" class="fixed inset-0 bg-slate-900/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 opacity-0 transition-opacity">
+    <div class="bg-slate-50 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh]">
+      <div class="bg-slate-800 p-4 text-white flex justify-between items-center shrink-0 rounded-t-2xl">
+        <h3 class="text-sm font-bold tracking-widest"><i class="fa-solid fa-wand-magic-sparkles text-teal-400 mr-2"></i>AI 賣家智慧上架 <span id="s-draft-badge" class="hidden bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] ml-2">已載入草稿</span></h3>
+        <button onclick="closeModal('seller-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="p-4 md:p-6 overflow-y-auto hide-scroll flex-grow" id="seller-modal-body">
+        <div id="step-camera" class="space-y-4">
+          <div class="w-full aspect-[4/3] bg-black rounded-xl overflow-hidden relative camera-frame p-2 flex items-center justify-center">
+            <video id="camera-stream" autoplay playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+            <canvas id="camera-canvas" class="hidden"></canvas>
+            <div class="z-10 absolute bottom-6 text-center w-full"><span class="bg-black/50 text-white px-4 py-1.5 rounded-full text-xs font-bold">請拍攝物件的</span><h4 id="cam-angle-text" class="text-white text-3xl font-bold mt-2 tracking-widest drop-shadow-lg">上方</h4></div>
+          </div>
+          <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex space-x-1.5 w-1/2" id="cam-progress"></div>
+            <button id="btn-take-photo" onclick="takeRealPhoto()" class="w-1/2 py-3 bg-rose-600 text-white rounded-full font-bold shadow-md tracking-widest"><i class="fa-solid fa-camera mr-2"></i>拍下此視角</button>
+          </div>
+          <button onclick="skipCameraForDraft()" class="w-full text-xs text-slate-500 font-bold underline mt-2 text-center hidden" id="btn-skip-cam">直接接續填寫上次草稿</button>
+        </div>
+        <div id="step-seller-form" class="hidden space-y-5 pb-4" oninput="saveDraft('seller')">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h4 class="text-sm font-bold text-teal-700 flex items-center border-b pb-2">物件基本資料</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1">類別</label><input type="text" id="s-cat" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold"></div>
+              <div><label class="block text-[11px] font-bold text-slate-500 mb-1">項目</label><input type="text" id="s-item" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold"></div>
+              <div class="col-span-2"><label class="block text-[11px] font-bold text-slate-500 mb-1">標題</label><input type="text" id="s-name" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold"></div>
+              <div class="col-span-2"><label class="block text-[11px] font-bold text-slate-500 mb-1">色系</label><input type="text" id="s-color" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold"></div>
+              <div class="col-span-2 flex gap-2"><input type="number" id="s-w" placeholder="寬" class="w-1/3 p-3 bg-slate-50 border rounded-xl font-mono text-center font-bold"><input type="number" id="s-d" placeholder="深" class="w-1/3 p-3 bg-slate-50 border rounded-xl font-mono text-center font-bold"><input type="number" id="s-h" placeholder="高" class="w-1/3 p-3 bg-slate-50 border rounded-xl font-mono text-center font-bold"></div>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h4 class="text-sm font-bold text-rose-500 flex items-center border-b pb-2">精確所在地</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div><input type="text" id="s-city" placeholder="縣市*" value="台北市" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+              <div><input type="text" id="s-dist" placeholder="鄉鎮區*" value="信義區" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+              <div class="col-span-2"><input type="text" id="s-road" placeholder="路段*" value="信義路五段" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+              <div><input type="text" id="s-street" placeholder="街道" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+              <div><input type="text" id="s-alley" placeholder="巷弄" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+              <div><input type="text" id="s-no" placeholder="號碼*" value="7號" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+              <div><input type="number" id="s-floor" placeholder="樓層*" value="1" class="w-full p-3 bg-slate-50 border rounded-xl text-center font-bold"></div>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h4 class="text-sm font-bold text-teal-600 flex items-center border-b pb-2">時間與售價</h4>
+            <input type="date" id="s-deadline" class="w-full p-3 bg-rose-50 border border-rose-200 rounded-xl font-bold">
+            <input type="number" id="s-price" min="100" step="100" placeholder="售價(100的倍數)" class="w-full p-3 bg-teal-50 border border-teal-200 rounded-xl text-lg font-mono font-bold text-teal-900 text-center">
+            <div class="grid grid-cols-2 gap-3 pt-2">
+              <select id="s-carry" class="w-full p-3 bg-slate-50 border rounded-xl text-xs font-bold text-slate-600"><option value="可以幫忙搬下樓">✅ 可幫下樓</option><option value="此物不必搬下樓">➖ 不必下樓</option></select>
+              <select id="s-disasm" class="w-full p-3 bg-slate-50 border rounded-xl text-xs font-bold text-slate-600"><option value="可以幫忙拆卸">🛠️ 可幫拆卸</option><option value="此物不必拆卸" selected>➖ 不必拆卸</option></select>
+            </div>
+          </div>
+          <button id="btn-submit-seller" onclick="submitSellerForm()" class="w-full py-4 mt-2 bg-teal-700 text-white rounded-xl font-bold tracking-widest shadow-lg transition transform active:scale-95">確認發佈上架 (背景即時同步)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="buyer-modal" class="fixed inset-0 bg-slate-900/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 opacity-0 transition-opacity">
+    <div class="bg-slate-50 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh]">
+      <div class="bg-indigo-900 p-4 text-white flex justify-between items-center shrink-0 rounded-t-2xl">
+        <h3 class="text-sm font-bold tracking-widest"><i class="fa-solid fa-bullhorn text-indigo-400 mr-2"></i>建立買家需求 <span id="b-draft-badge" class="hidden bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] ml-2">已載入草稿</span></h3>
+        <button onclick="closeModal('buyer-modal')" class="text-indigo-300 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="p-4 md:p-6 overflow-y-auto hide-scroll flex-grow space-y-5 pb-8" oninput="saveDraft('buyer')">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="text-sm font-bold text-indigo-700 border-b border-slate-100 pb-2">您想尋找什麼？</h4>
+          <div class="grid grid-cols-2 gap-3">
+            <div><input type="text" id="b-cat" placeholder="類別(例:沙發)" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm text-slate-700"></div>
+            <div><input type="text" id="b-item" placeholder="項目(例:雙人沙發)" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm text-slate-700"></div>
+            <div class="col-span-2"><input type="text" id="b-color" placeholder="期望色系(例:木紋)" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm text-slate-700"></div>
+            <div class="col-span-2 flex gap-2"><input type="number" id="b-w" placeholder="最寬" class="w-1/3 p-3 bg-slate-50 border rounded-xl text-center font-mono font-bold"><input type="number" id="b-d" placeholder="最深" class="w-1/3 p-3 bg-slate-50 border rounded-xl text-center font-mono font-bold"><input type="number" id="b-h" placeholder="最高" class="w-1/3 p-3 bg-slate-50 border rounded-xl text-center font-mono font-bold"></div>
+          </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="text-sm font-bold text-slate-700 flex items-center border-b border-slate-100 pb-2">精確徵求地與時間</h4>
+          <div class="grid grid-cols-2 gap-3 mb-2">
+            <div><input type="text" id="b-city" value="台北市" placeholder="縣市*" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+            <div><input type="text" id="b-dist" value="信義區" placeholder="鄉鎮區*" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+            <div class="col-span-2"><input type="text" id="b-road" placeholder="路段*" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+            <div><input type="text" id="b-street" placeholder="街道" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+            <div><input type="text" id="b-alley" placeholder="巷弄" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+            <div><input type="text" id="b-no" placeholder="號碼*" class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></div>
+            <div><input type="number" id="b-floor" value="1" placeholder="樓層*" class="w-full p-3 bg-slate-50 border rounded-xl text-center font-bold"></div>
+          </div>
+          <input type="date" id="b-deadline" class="w-full p-3 bg-rose-50 border border-rose-200 rounded-xl font-bold text-sm">
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <button id="btn-ai-estimate" onclick="estimateSavings()" class="w-full py-3 bg-green-50 text-green-700 font-bold rounded-xl border border-green-200 hover:bg-green-100 transition"><i class="fa-solid fa-calculator mr-2"></i>AI 估算購買新品約需多少錢</button>
+          <div id="estimate-result" class="hidden text-center bg-green-100 p-4 rounded-xl border border-green-300">
+            <p class="text-xs text-green-800 font-bold">在我們平台成交，您預估可省下：</p>
+            <p class="text-2xl font-black text-green-700 mt-1"><span id="saved-amount"></span> <span class="text-sm font-bold">元</span></p>
+          </div>
+        </div>
+        <button id="btn-submit-req" onclick="submitRequirement()" class="w-full py-4 bg-indigo-600 text-white rounded-xl text-base font-bold shadow-xl tracking-widest transition transform active:scale-95">極速發佈買家需求</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    
+    
+    
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwtBHLxEmAolz6TxMJw43fUmugQokKA6RncGXf9W3A0dUFx5XI2YSZOPsAOR7PFw1NW-g/exec";
+
+    let currentUser = null; let currentChallengeType = ''; let isEditing = false; let currentUploadedBankImageUrl = "";
+    
+    
+    let sellerItems = JSON.parse(localStorage.getItem('local_seller_items') || "[]"); 
+    let buyerReqs = JSON.parse(localStorage.getItem('local_buyer_reqs') || "[]");
+    
+    const angles = ['上方', '下方', '左側', '右側', '前方', '後方', '合照'];
+    let currentAngleIndex = 0; let mockUploadedPhotos = []; let videoStream = null;
+
+    
+    async function callBackendAPI(action, data) {
+      if (GAS_API_URL.includes("請把剛剛部署")) throw new Error("Missing API URL");
+      const res = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify({ action, data }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } });
+      return await res.json();
+    }
+
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toast-container'); const t = document.createElement('div');
+      let bg = type === 'success' ? 'bg-teal-600' : (type === 'error' ? 'bg-rose-600' : 'bg-slate-800');
+      t.className = `px-5 py-3.5 rounded-xl shadow-xl transition-all duration-300 font-bold text-sm text-center text-white transform -translate-y-10 opacity-0 ${bg} w-full`;
+      t.innerText = msg; c.appendChild(t);
+      requestAnimationFrame(() => t.classList.replace('-translate-y-10', 'translate-y-0') || t.classList.replace('opacity-0', 'opacity-100'));
+      setTimeout(() => { t.classList.replace('translate-y-0', '-translate-y-10') || t.classList.replace('opacity-100', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    
+    window.onload = function() {
+      if (localStorage.getItem('user_session')) { currentUser = JSON.parse(localStorage.getItem('user_session')); showAppArea(); }
+    };
+
+    function switchAuthMode(mode) {
+      document.getElementById('form-login').classList.toggle('hidden', mode === 'register'); document.getElementById('form-register').classList.toggle('hidden', mode === 'login');
+    }
+
+    function switchAppTab(tabId) {
+      ['member', 'market', 'chat', 'match'].forEach(id => {
+        document.getElementById(`tab-content-${id}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-app-${id}`); btn.classList.remove('text-teal-700', 'border-teal-600'); btn.classList.add('text-slate-400', 'border-transparent');
+      });
+      document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-app-${tabId}`); activeBtn.classList.add('text-teal-700', 'border-teal-600'); activeBtn.classList.remove('text-slate-400', 'border-transparent');
+      if (tabId === 'market') { renderSellerItems(); renderBuyerReqs(); }
+    }
+
+    function showAppArea() {
+      document.getElementById('auth-section').classList.add('hidden');
+      document.getElementById('nav-user-area').classList.remove('hidden'); document.getElementById('app-nav').classList.remove('hidden'); document.getElementById('app-container').classList.remove('hidden');
+      document.getElementById('header-user-name').innerText = `${currentUser.name} (@${currentUser.memberCode})`;
+      populateProfileData(); switchAppTab('member');
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('user_session'); currentUser = null;
+      document.getElementById('app-nav').classList.add('hidden'); document.getElementById('app-container').classList.add('hidden'); document.getElementById('nav-user-area').classList.add('hidden');
+      document.getElementById('auth-section').classList.remove('hidden'); switchAuthMode('login'); resetLoginToStep(1); showToast("已安全登出系統", "info");
+    }
+
+    
+    async function submitRegistration() {
+      const payload = { email: document.getElementById('reg-email').value, name: document.getElementById('reg-name').value, birthday: document.getElementById('reg-birthday').value, phone: `${document.getElementById('reg-phone-1').value}-${document.getElementById('reg-phone-2').value}` };
+      const btn = document.getElementById('btn-submit-reg'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>處理中`; btn.disabled = true;
+      try { const res = await callBackendAPI('register', payload); if(res.status === 'success') { showToast(res.message, "success"); switchAuthMode('login'); document.getElementById('login-email').value = payload.email; } else showToast(res.message, "error"); } catch(err) { showToast("連線異常", "error"); } finally { btn.innerHTML = "完成設定並提交"; btn.disabled = false; }
+    }
+
+    async function requestOTP() {
+      const email = document.getElementById('login-email').value; if (!email) return showToast("請輸入電子郵件", "error");
+      const btn = document.getElementById('btn-request-otp'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>核發中`; btn.disabled = true;
+      try { const res = await callBackendAPI('requestOTP', { email }); if(res.status === 'success') { showToast(res.message, "success"); document.getElementById('login-step-1').classList.add('hidden'); document.getElementById('login-step-2').classList.remove('hidden'); } else showToast(res.message, "error"); } catch(err) { showToast("系統異常", "error"); } finally { btn.innerHTML = "發送登入授權碼"; btn.disabled = false; }
+    }
+
+    async function verifyOTP() {
+      const email = document.getElementById('login-email').value, otp = document.getElementById('login-otp').value;
+      const btn = document.getElementById('btn-verify-otp'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>驗證中`; btn.disabled = true;
+      try {
+        const res = await callBackendAPI('verifyOTP', { email, otp });
+        if (res.status === 'success') {
+          showToast("授權碼正確", "success"); currentChallengeType = ['name', 'birthday', 'phone'][Math.floor(Math.random() * 3)];
+          document.getElementById('challenge-label').innerText = `請輸入帳戶設定之「${currentChallengeType==='name'?'真實姓名':currentChallengeType==='birthday'?'出生年月日':'聯絡電話'}」`;
+          document.getElementById('challenge-input-area').innerHTML = currentChallengeType === 'phone' ? `<div class="flex space-x-2"><input id="ch-p1" maxlength="4" class="w-1/3 px-4 py-3 bg-slate-50 border rounded-xl text-center font-mono font-bold"><span class="mt-3">-</span><input id="ch-p2" maxlength="6" class="w-2/3 px-4 py-3 bg-slate-50 border rounded-xl text-center font-mono font-bold"></div>` : `<input type="${currentChallengeType==='birthday'?'date':'text'}" id="challenge-input" class="w-full px-4 py-3 bg-slate-50 border rounded-xl font-bold">`;
+          document.getElementById('login-step-2').classList.add('hidden'); document.getElementById('login-step-3').classList.remove('hidden');
+        } else showToast(res.message, "error");
+      } catch(err) { showToast("通訊異常", "error"); } finally { btn.innerHTML = "驗證並前往安全確認"; btn.disabled = false; }
+    }
+
+    async function verifyChallengeAndLogin() {
+      const email = document.getElementById('login-email').value, answer = currentChallengeType === 'phone' ? `${document.getElementById('ch-p1').value}-${document.getElementById('ch-p2').value}` : document.getElementById('challenge-input').value;
+      const btn = document.getElementById('btn-verify-challenge'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>確認中`; btn.disabled = true;
+      try {
+        const res = await callBackendAPI('verifyChallengeAndLogin', { email, challengeType: currentChallengeType, challengeAnswer: answer });
+        if (res.status === 'success') { showToast("登入成功", "success"); currentUser = res.user; localStorage.setItem('user_session', JSON.stringify(currentUser)); setTimeout(showAppArea, 500); } else showToast(res.message, "error");
+      } catch(err) { showToast("通訊異常", "error"); } finally { btn.innerHTML = "確認並登入"; btn.disabled = false; }
+    }
+
+    function resetLoginToStep(step) { ['1','2','3'].forEach(s => document.getElementById(`login-step-${s}`).classList.add('hidden')); if(step===1) { document.getElementById('login-step-1').classList.remove('hidden'); document.getElementById('login-email').value=''; document.getElementById('login-otp').value=''; } }
+
+    function populateProfileData() {
+      if(!currentUser) return; document.getElementById('welcome-name').innerText = currentUser.name || '';
+      ['memberCode', 'email', 'name', 'birthday', 'phone', 'bankCode', 'bankName', 'bankAccount', 'accountName'].forEach(k => { if(document.getElementById(`prof-${k.replace(/[A-Z]/g, m => '-'+m.toLowerCase())}`)) document.getElementById(`prof-${k.replace(/[A-Z]/g, m => '-'+m.toLowerCase())}`).value = currentUser[k] || ''; });
+      currentUploadedBankImageUrl = currentUser.bankImageUrl || "";
+      if(currentUploadedBankImageUrl) { document.getElementById('bank-image-container').classList.remove('hidden'); document.getElementById('prof-bank-image').src = currentUploadedBankImageUrl; }
+    }
+
+    function toggleEditMode(force = null) {
+      isEditing = force !== null ? force : !isEditing;
+      document.querySelectorAll('.prof-editable').forEach(el => { isEditing ? (el.removeAttribute('readonly'), el.classList.add('edit-mode-input')) : (el.setAttribute('readonly', 'true'), el.classList.remove('edit-mode-input')); });
+      document.getElementById('btn-toggle-edit').classList.toggle('hidden', isEditing); document.getElementById('save-action-area').classList.toggle('hidden', !isEditing); document.getElementById('ai-upload-area').classList.toggle('hidden', !isEditing);
+      if(!isEditing) populateProfileData();
+    }
+
+    async function saveProfile() {
+      const payload = { email: currentUser.email, name: document.getElementById('prof-name').value, birthday: document.getElementById('prof-birthday').value, phone: document.getElementById('prof-phone').value, bankCode: document.getElementById('prof-bank-code').value, bankName: document.getElementById('prof-bank-name').value, bankAccount: document.getElementById('prof-bank-account').value, accountName: document.getElementById('prof-account-name').value, bankImageUrl: currentUploadedBankImageUrl };
+      try { const res = await callBackendAPI('updateProfile', payload); if(res.status === 'success') { Object.assign(currentUser, payload); localStorage.setItem('user_session', JSON.stringify(currentUser)); showToast("更新成功", "success"); toggleEditMode(false); } else showToast(res.message, "error"); } catch(e) { showToast("連線異常", "error"); }
+    }
+
+    function handleBankImageUpload(e) {
+      const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
+      reader.onload = async(event) => {
+        const aiBtn = document.getElementById('ai-upload-area'); const origHTML = aiBtn.innerHTML; aiBtn.innerHTML = `<span class="text-[11px] text-teal-700 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>識別中...</span>`;
+        try { const res = await callBackendAPI('processBankImage', { base64Image: event.target.result, userEmail: currentUser.email, userName: currentUser.name, mimeType: file.type }); if(res.status === 'success') { ['bankCode', 'bankName', 'bankAccount', 'accountName'].forEach(k => document.getElementById(`prof-${k.replace(/[A-Z]/g, m => '-'+m.toLowerCase())}`).value = res.data[k] || ''); currentUploadedBankImageUrl = res.data.bankImageUrl; document.getElementById('bank-image-container').classList.remove('hidden'); document.getElementById('prof-bank-image').src = currentUploadedBankImageUrl; showToast("識別完成", "success"); } else showToast(res.message, "error"); } catch(err) { showToast("影像解析失敗", "error"); } finally { aiBtn.innerHTML = origHTML; }
+      }; reader.readAsDataURL(file);
+    }
+
+    // ==========================================
+    // 買賣專區邏輯 (雙子分頁 + 草稿 + 樂觀 UI)
+    // ==========================================
+
+    function switchMarketTab(tab) {
+      document.getElementById('view-seller').classList.toggle('hidden', tab !== 'seller'); document.getElementById('view-buyer').classList.toggle('hidden', tab !== 'buyer');
+      if(tab === 'seller') {
+        document.getElementById('subtab-seller').className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 bg-white text-teal-700 shadow shadow-slate-200 tracking-widest";
+        document.getElementById('subtab-buyer').className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 text-slate-500 hover:text-slate-700 tracking-widest";
+      } else {
+        document.getElementById('subtab-buyer').className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 bg-white text-indigo-700 shadow shadow-slate-200 tracking-widest";
+        document.getElementById('subtab-seller').className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 text-slate-500 hover:text-slate-700 tracking-widest";
+      }
+    }
+
+    function renderSellerItems() {
+      const c = document.getElementById('seller-items-container'); c.innerHTML = '';
+      if(sellerItems.length === 0) return c.innerHTML = '<p class="text-center text-slate-400 font-bold mt-10">尚無上架物件</p>';
+      sellerItems.forEach(i => {
+        let urls = i.photoUrlsString ? i.photoUrlsString.split(',') : [];
+        let imgs = urls.length ? urls.map(u => `<img src="${u}" class="h-20 w-28 flex-shrink-0 object-cover rounded shadow-sm">`).join('') : '<div class="h-20 w-full flex items-center justify-center bg-slate-100 rounded text-xs text-slate-400 font-bold">照片處理中...</div>';
+        c.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-l-4 border-l-teal-500 p-4"><div class="flex justify-between items-center mb-1"><span class="text-[10px] font-mono text-slate-400">${i.id}</span><span class="bg-teal-50 text-teal-700 px-2 rounded text-[10px] font-bold">上架中</span></div><h3 class="font-bold text-sm">${i.name} <span class="text-xs text-slate-500">($${i.price})</span></h3><p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${i.city}${i.district}</p><div class="flex space-x-2 overflow-x-auto hide-scroll mt-3">${imgs}</div></div>`);
+      });
+    }
+
+    function renderBuyerReqs() {
+      const c = document.getElementById('buyer-reqs-container'); c.innerHTML = '';
+      if(buyerReqs.length === 0) return c.innerHTML = '<p class="text-center text-slate-400 font-bold mt-10">尚無發佈需求</p>';
+      buyerReqs.forEach(r => {
+        c.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-l-4 border-l-indigo-500 p-4"><div class="flex justify-between items-center mb-1"><span class="text-[10px] font-mono text-slate-400">${r.id}</span><span class="bg-indigo-50 text-indigo-700 px-2 rounded text-[10px] font-bold">徵求中</span></div><h3 class="font-bold text-sm">徵求：${r.itemType} <span class="text-xs text-slate-500">(${r.color})</span></h3><p class="text-[10px] font-bold text-green-600 mt-1"><i class="fa-solid fa-leaf mr-1"></i>預計省下：$${r.savedCost}</p><p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${r.city}${r.district}</p></div>`);
+      });
+    }
+
+    const SELLER_KEYS = ['s-cat','s-item','s-name','s-color','s-w','s-d','s-h','s-city','s-dist','s-road','s-street','s-alley','s-no','s-floor','s-deadline','s-price','s-carry','s-disasm'];
+    const BUYER_KEYS = ['b-cat','b-item','b-color','b-w','b-d','b-h','b-city','b-dist','b-road','b-street','b-alley','b-no','b-floor','b-deadline'];
+    function saveDraft(type) { const keys = type === 'seller' ? SELLER_KEYS : BUYER_KEYS; let draft = {}; keys.forEach(k => draft[k] = document.getElementById(k).value); localStorage.setItem(`draft_${type}`, JSON.stringify(draft)); }
+    function loadDraft(type) { let draftStr = localStorage.getItem(`draft_${type}`); if(!draftStr) return false; let draft = JSON.parse(draftStr); let hasData = false; Object.keys(draft).forEach(k => { if(draft[k] && document.getElementById(k)) { document.getElementById(k).value = draft[k]; hasData = true; }}); return hasData; }
+    function clearDraft(type) { localStorage.removeItem(`draft_${type}`); }
+
+    function closeModal(id) { document.getElementById(id).classList.add('opacity-0'); setTimeout(() => document.getElementById(id).classList.add('hidden'), 300); if(id === 'seller-modal') stopCamera(); }
+
+    // 買家功能
+    function openBuyerModal() {
+      document.getElementById('buyer-modal').classList.remove('hidden'); setTimeout(() => document.getElementById('buyer-modal').classList.remove('opacity-0'), 10);
+      let hasDraft = loadDraft('buyer'); document.getElementById('b-draft-badge').classList.toggle('hidden', !hasDraft);
+      if(!hasDraft) { const d = new Date(); d.setDate(d.getDate() + 14); document.getElementById('b-deadline').value = d.toISOString().split('T')[0]; }
+    }
+    
+    async function estimateSavings() {
+      const cat = document.getElementById('b-cat').value; const item = document.getElementById('b-item').value; if(!cat || !item) return showToast("請先填寫目標類別與項目", "error");
+      const btn = document.getElementById('btn-ai-estimate'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>AI 查詢中...`; btn.disabled = true;
+      try { const res = await callBackendAPI('estimateSavings', { category: cat, itemType: item }); if(res.status === 'success') { document.getElementById('saved-amount').innerText = res.data.savedCost; document.getElementById('estimate-result').classList.remove('hidden'); } } catch(e) { showToast("連線異常", "error"); }
+      btn.innerHTML = `<i class="fa-solid fa-calculator mr-2"></i>AI 估算購買新品約需多少錢`; btn.disabled = false;
+    }
+
+    function submitRequirement() {
+      if(!document.getElementById('b-deadline').value) return showToast("請填寫需求死線", "error");
+      const newReq = {
+        id: `REQ-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`, buyerEmail: currentUser.email, buyerMemberCode: currentUser.memberCode,
+        category: document.getElementById('b-cat').value, itemType: document.getElementById('b-item').value, color: document.getElementById('b-color').value,
+        maxWidth: document.getElementById('b-w').value, maxDepth: document.getElementById('b-d').value, maxHeight: document.getElementById('b-h').value,
+        city: document.getElementById('b-city').value, district: document.getElementById('b-dist').value, road: document.getElementById('b-road').value, street: document.getElementById('b-street').value, alley: document.getElementById('b-alley').value, number: document.getElementById('b-no').value, floor: document.getElementById('b-floor').value,
+        deadline: document.getElementById('b-deadline').value, savedCost: document.getElementById('saved-amount').innerText || 0, status: "Active"
+      };
+      buyerReqs.unshift(newReq); localStorage.setItem('local_buyer_reqs', JSON.stringify(buyerReqs)); renderBuyerReqs(); clearDraft('buyer'); closeModal('buyer-modal');
+      showToast("🚀 需求已建立，背景同步中...", "success"); callBackendAPI('saveRequirement', newReq).catch(e => console.error("寫入失敗", e));
+    }
+
+    // 賣家功能
+    async function openSellerModal() {
+      currentAngleIndex = 0; mockUploadedPhotos = []; document.getElementById('cam-angle-text').innerText = angles[0];
+      let hasDraft = !!localStorage.getItem('draft_seller'); document.getElementById('btn-skip-cam').classList.toggle('hidden', !hasDraft); document.getElementById('s-draft-badge').classList.toggle('hidden', !hasDraft);
+      document.getElementById('step-camera').classList.remove('hidden'); document.getElementById('step-seller-form').classList.add('hidden');
+      document.getElementById('seller-modal').classList.remove('hidden'); setTimeout(() => document.getElementById('seller-modal').classList.remove('opacity-0'), 10);
+      try { videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); document.getElementById('camera-stream').srcObject = videoStream; } catch(e) { showToast("相機啟動失敗", "error"); }
+    }
+    
+    function stopCamera() { if(videoStream) videoStream.getTracks().forEach(t => t.stop()); }
+    function skipCameraForDraft() { stopCamera(); loadDraft('seller'); document.getElementById('step-camera').classList.add('hidden'); document.getElementById('step-seller-form').classList.remove('hidden'); }
+
+    async function takeRealPhoto() {
+      const v = document.getElementById('camera-stream'); const c = document.getElementById('camera-canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); mockUploadedPhotos.push(c.toDataURL('image/jpeg', 0.6));
+      if(currentAngleIndex < 6) {
+        currentAngleIndex++; document.getElementById('cam-angle-text').innerText = angles[currentAngleIndex]; document.getElementById('cam-progress').innerHTML = angles.map((_,i) => `<div class="h-2 w-full rounded-full ${i<=currentAngleIndex?'bg-teal-500':'bg-slate-200'}"></div>`).join('');
+      } else {
+        stopCamera(); const btn = document.getElementById('btn-take-photo'); btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>AI 解析中...`; btn.disabled = true;
+        try {
+          const res = await callBackendAPI('analyzeImages', { photos: mockUploadedPhotos });
+          if (res.status === 'success') {
+            document.getElementById('s-cat').value = res.data.category || ''; document.getElementById('s-item').value = res.data.itemType || ''; document.getElementById('s-name').value = res.data.name || ''; document.getElementById('s-color').value = res.data.color || ''; document.getElementById('s-w').value = res.data.width || ''; document.getElementById('s-d').value = res.data.depth || ''; document.getElementById('s-h').value = res.data.height || '';
+            document.getElementById('step-camera').classList.add('hidden'); document.getElementById('step-seller-form').classList.remove('hidden');
+            const d = new Date(); d.setDate(d.getDate() + 14); document.getElementById('s-deadline').value = d.toISOString().split('T')[0]; saveDraft('seller');
+          } else showToast("AI 解析失敗", "error");
+        } catch(e) { showToast("請手動輸入", "error"); document.getElementById('step-camera').classList.add('hidden'); document.getElementById('step-seller-form').classList.remove('hidden'); }
+        btn.innerHTML = "拍下此視角"; btn.disabled = false;
+      }
+    }
+
+    function submitSellerForm() {
+      const p = parseInt(document.getElementById('s-price').value); if(p < 100 || p > 2000 || p % 100 !== 0) return showToast("金額須為 100~2000 且為 100 倍數", "error");
+      const newItem = {
+        id: `ITM-${Math.floor(Math.random()*1000).toString().padStart(3,'0')}`, sellerEmail: currentUser.email, sellerMemberCode: currentUser.memberCode,
+        category: document.getElementById('s-cat').value, itemType: document.getElementById('s-item').value, name: document.getElementById('s-name').value, color: document.getElementById('s-color').value,
+        width: document.getElementById('s-w').value, depth: document.getElementById('s-d').value, height: document.getElementById('s-h').value,
+        city: document.getElementById('s-city').value, district: document.getElementById('s-dist').value, road: document.getElementById('s-road').value, street: document.getElementById('s-street').value, alley: document.getElementById('s-alley').value, number: document.getElementById('s-no').value, floor: document.getElementById('s-floor').value,
+        deadline: document.getElementById('s-deadline').value, timeSlots: "多時段", price: p, wasteFee: 1500, carry: document.getElementById('s-carry').value, disassemble: document.getElementById('s-disasm').value, status: "Active", photosBase64: mockUploadedPhotos, photoUrlsString: ""
+      };
+      sellerItems.unshift(newItem); localStorage.setItem('local_seller_items', JSON.stringify(sellerItems)); renderSellerItems(); clearDraft('seller'); closeModal('seller-modal');
+      showToast("🚀 物件已上架，背景上傳圖片中...", "success");
+      callBackendAPI('saveListing', newItem).then(res => { if(res.photoUrls) { sellerItems[0].photoUrlsString = res.photoUrls; localStorage.setItem('local_seller_items', JSON.stringify(sellerItems)); renderSellerItems(); } }).catch(e => console.error("寫入失敗", e));
+    }
+
+  </script>
 </body>
 </html>
